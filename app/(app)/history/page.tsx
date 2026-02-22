@@ -2,8 +2,9 @@
 
 import { useEffect, useState } from "react";
 import { getHistory, type HistoryEntry } from "@/lib/api";
-import { ChevronDown, ChevronRight, ChevronLeft } from "lucide-react";
+import { ChevronDown, ChevronRight, ChevronLeft, Filter } from "lucide-react";
 import SqlHighlighter from "@/components/sql/SqlHighlighter";
+import { useConnectionStore } from "@/lib/store";
 
 
 const PAGE_SIZE = 20;
@@ -128,6 +129,8 @@ function HistorySkeleton() {
 
 // ─── Page ─────────────────────────────────────────────────────────────────────
 export default function HistoryPage() {
+  const { selectedId } = useConnectionStore();
+  const [showAll, setShowAll] = useState(false);
   const [entries, setEntries] = useState<HistoryEntry[]>([]);
   const [total, setTotal] = useState(0);
   const [page, setPage] = useState(0);
@@ -137,7 +140,8 @@ export default function HistoryPage() {
     const load = async () => {
       setLoading(true);
       try {
-        const { items, total: t } = await getHistory(page + 1, PAGE_SIZE);
+        const connId = showAll ? null : selectedId;
+        const { items, total: t } = await getHistory(page + 1, PAGE_SIZE, connId);
         setEntries(items);
         setTotal(t);
       } finally {
@@ -145,17 +149,41 @@ export default function HistoryPage() {
       }
     };
     load();
-  }, [page]);
+  }, [page, showAll, selectedId]);
 
   const totalPages = Math.ceil(total / PAGE_SIZE);
 
   return (
     <div style={{ maxWidth: 1100, margin: "0 auto" }}>
-      <div style={{ marginBottom: 28 }}>
-        <h1 className="font-heading" style={{ fontSize: 28, marginBottom: 6 }}>Query History</h1>
-        <p style={{ fontSize: 14, color: "var(--text-secondary)" }}>
-          {total} total queries — click any row to expand.
-        </p>
+      <div style={{ marginBottom: 28, display: "flex", alignItems: "flex-end", justifyContent: "space-between" }}>
+        <div>
+          <h1 className="font-heading" style={{ fontSize: 28, marginBottom: 6 }}>Query History</h1>
+          <p style={{ fontSize: 14, color: "var(--text-secondary)" }}>
+            {total} total queries — click any row to expand.
+          </p>
+        </div>
+
+        <div style={{ display: "flex", alignItems: "center", gap: 8, padding: "8px 16px", background: "var(--bg-raised)", borderRadius: 10, border: "1px solid var(--border-default)" }}>
+          <label className="flex items-center gap-2 cursor-pointer select-none">
+            <input
+              type="checkbox"
+              checked={showAll}
+              onChange={(e) => {
+                setShowAll(e.target.checked);
+                setPage(0); // Reset to first page when toggling filter
+              }}
+              style={{
+                width: 16,
+                height: 16,
+                accentColor: "var(--accent)",
+                cursor: "pointer",
+              }}
+            />
+            <span style={{ fontSize: 13, color: "var(--text-primary)", fontWeight: 500 }}>
+              Show all queries
+            </span>
+          </label>
+        </div>
       </div>
 
       <div className="card" style={{ overflow: "hidden" }}>

@@ -31,29 +31,31 @@ export default function Sidebar() {
   return (
     <aside className="sidebar">
       {/* Logo */}
-      <div
-        style={{
-          padding: isSidebarCollapsed ? "20px 0" : "20px 16px 16px",
-          borderBottom: "1px solid var(--border-subtle)",
-          display: "flex",
-          justifyContent: isSidebarCollapsed ? "center" : "flex-start",
-          height: 70,
-          alignItems: "center",
-          transition: "padding 0.3s ease",
-        }}
-      >
-        {!isSidebarCollapsed ? (
-          <span
-            className="font-heading"
-            style={{ fontSize: "20px", color: "var(--text-primary)", letterSpacing: "-0.04em" }}
-          >
-            Query
-            <span style={{ color: "var(--accent)" }}>Mind</span>
-          </span>
-        ) : (
-          <span style={{ color: "var(--accent)", fontWeight: 800, fontSize: "24px" }}>Q</span>
-        )}
-      </div>
+      <Link href="/">
+        <div
+          style={{
+            padding: isSidebarCollapsed ? "20px 0" : "20px 16px 16px",
+            borderBottom: "1px solid var(--border-subtle)",
+            display: "flex",
+            justifyContent: isSidebarCollapsed ? "center" : "flex-start",
+            height: 70,
+            alignItems: "center",
+            transition: "padding 0.3s ease",
+          }}
+        >
+          {!isSidebarCollapsed ? (
+            <span
+              className="font-heading"
+              style={{ fontSize: "20px", color: "var(--text-primary)", letterSpacing: "-0.04em" }}
+            >
+              Query
+              <span style={{ color: "var(--accent)" }}>Mind</span>
+            </span>
+          ) : (
+            <span style={{ color: "var(--accent)", fontWeight: 800, fontSize: "24px" }}>Q</span>
+          )}
+        </div>
+      </Link>
 
       {/* Navigation */}
       <nav style={{ flex: 1, paddingTop: "8px", display: "flex", flexDirection: "column", gap: "4px" }}>

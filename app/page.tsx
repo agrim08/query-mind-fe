@@ -1,4 +1,7 @@
+"use client";
+
 import Link from "next/link";
+import { SignedIn, SignedOut, UserButton } from "@clerk/nextjs";
 
 const NAV_LINKS = ["Dashboard", "History", "Connections", "Settings"] as const;
 const DOTS = ["#ef4444", "#f59e0b", "#22c55e"] as const;
@@ -27,8 +30,14 @@ export default function LandingPage() {
           </span>
         </div>
         <div className="landing-nav-actions">
-          <Link href="/sign-in" className="btn btn-ghost btn-sm">Sign In</Link>
-          <Link href="/sign-up" className="btn btn-primary btn-sm">Get Started</Link>
+          <SignedOut>
+            <Link href="/sign-in" className="btn btn-ghost btn-sm">Sign In</Link>
+            <Link href="/sign-up" className="btn btn-primary btn-sm">Get Started</Link>
+          </SignedOut>
+          <SignedIn>
+            <Link href="/dashboard" className="btn btn-ghost btn-sm">Dashboard</Link>
+            <UserButton afterSignOutUrl="/" />
+          </SignedIn>
         </div>
       </nav>
 
@@ -55,8 +64,13 @@ export default function LandingPage() {
         </p>
 
         <div className="hero-cta-row">
-          <Link href="/sign-up" className="btn btn-primary btn-lg">Start for free →</Link>
-          <Link href="/sign-in" className="btn btn-secondary btn-lg">Sign in</Link>
+          <SignedOut>
+            <Link href="/sign-up" className="btn btn-primary btn-lg">Start for free →</Link>
+            <Link href="/sign-in" className="btn btn-secondary btn-lg">Sign in</Link>
+          </SignedOut>
+          <SignedIn>
+            <Link href="/dashboard" className="btn btn-primary btn-lg">Go to Dashboard</Link>
+          </SignedIn>
         </div>
 
         {/* ── Fake terminal preview ── */}

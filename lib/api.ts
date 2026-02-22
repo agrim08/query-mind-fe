@@ -192,10 +192,18 @@ export function streamQuery(
             try {
               const raw = JSON.parse(line.slice(6));
               // Backend returns rows as list[list] — zip with columns into Record objects
-              if (raw.type === "results" && Array.isArray(raw.rows) && Array.isArray(raw.columns)) {
+              if (
+                raw.type === "results" &&
+                Array.isArray(raw.rows) &&
+                Array.isArray(raw.columns)
+              ) {
                 raw.rows = (raw.rows as unknown[][]).map((row: unknown[]) => {
                   const obj: Record<string, unknown> = {};
-                  (raw.columns as string[]).forEach((col: string, i: number) => { obj[col] = row[i]; });
+                  (raw.columns as string[]).forEach(
+                    (col: string, i: number) => {
+                      obj[col] = row[i];
+                    },
+                  );
                   return obj;
                 });
               }
@@ -229,12 +237,14 @@ export interface HistoryEntry {
 export async function getHistory(
   page = 1,
   pageSize = 20,
+  connectionId?: string | null,
 ): Promise<{ items: HistoryEntry[]; total: number }> {
   const headers = await authHeaders();
-  const res = await fetch(
-    `${BASE}/query/history?page=${page}&page_size=${pageSize}`,
-    { headers },
-  );
+  let url = `${BASE}/query/history?page=${page}&page_size=${pageSize}`;
+  if (connectionId) {
+    url += `&connection_id=${connectionId}`;
+  }
+  const res = await fetch(url, { headers });
   if (!res.ok) throw new Error("Failed to fetch history");
   // Backend returns a plain array (no total count yet)
   const items: HistoryEntry[] = await res.json();
