@@ -246,8 +246,7 @@ export async function getHistory(
   }
   const res = await fetch(url, { headers });
   if (!res.ok) throw new Error("Failed to fetch history");
-  // Backend returns a plain array (no total count yet)
-  const items: HistoryEntry[] = await res.json();
+  const items = await res.json();
   return {
     items,
     total:
@@ -255,4 +254,34 @@ export async function getHistory(
         ? (page - 1) * pageSize + items.length
         : page * pageSize + 1,
   };
+}
+
+// ─── Design ─────────────────────────────────────────────────────────────────
+
+export interface DesignHistoryEntry {
+  id: string;
+  prompt: string;
+  schema_json: any;
+  created_at: string;
+}
+
+export async function generateSchema(prompt: string): Promise<any> {
+  const headers = await authHeaders();
+  const res = await fetch(`${BASE}/design/generate-schema`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json", ...headers },
+    body: JSON.stringify({ prompt }),
+  });
+  if (!res.ok) {
+    const err = await res.json().catch(() => ({}));
+    throw new Error(err.detail ?? "Failed to generate schema");
+  }
+  return res.json();
+}
+
+export async function getDesignHistory(): Promise<DesignHistoryEntry[]> {
+  const headers = await authHeaders();
+  const res = await fetch(`${BASE}/design/history`, { headers });
+  if (!res.ok) throw new Error("Failed to fetch design history");
+  return res.json();
 }

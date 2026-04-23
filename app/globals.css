@@ -59,7 +59,69 @@
   /* Sidebar */
   --sidebar-width: 200px;
   --topbar-height: 56px;
+
+  /* Additional */
+  --bg-panel: #0f1011;
 }
+
+/* ═══════════════════════════════════════════════════
+   REACT FLOW DARK THEME
+   ═══════════════════════════════════════════════════ */
+.react-flow__minimap {
+  background-color: var(--bg-surface) !important;
+  border-radius: 12px !important;
+  border: 1px solid var(--border-subtle) !important;
+  overflow: hidden;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4) !important;
+}
+
+.react-flow__minimap svg {
+  background-color: var(--bg-surface) !important;
+}
+
+.react-flow__controls {
+  display: flex !important;
+  flex-direction: column !important;
+  gap: 2px !important;
+  background-color: var(--bg-surface) !important;
+  border: 1px solid var(--border-subtle) !important;
+  border-radius: 8px !important;
+  overflow: hidden;
+  padding: 2px !important;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.4) !important;
+}
+
+.react-flow__controls-button {
+  background-color: transparent !important;
+  color: var(--text-primary) !important;
+  border: none !important;
+  border-radius: 4px !important;
+  width: 28px !important;
+  height: 28px !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  transition: background-color 0.2s !important;
+}
+
+.react-flow__controls-button:hover {
+  background-color: var(--bg-raised) !important;
+}
+
+.react-flow__controls-button svg {
+  fill: currentColor !important;
+  width: 14px !important;
+  height: 14px !important;
+}
+
+.react-flow__attribution {
+  background-color: rgba(0, 0, 0, 0.5) !important;
+  color: var(--text-tertiary) !important;
+  padding: 2px 6px !important;
+  border-radius: 4px 0 0 0 !important;
+  font-size: 10px !important;
+}
+
 
 /* ═══════════════════════════════════════════════════
    BASE RESET
@@ -260,6 +322,13 @@ body {
   padding: var(--space-6);
   overflow-y: auto;
 }
+
+.page-content.no-padding {
+  padding: 0;
+  height: calc(100vh - var(--topbar-height));
+  overflow: hidden;
+}
+
 
 /* ═══════════════════════════════════════════════════
    NAVIGATION
@@ -1712,3 +1781,21 @@ select.input {
     display: none;
   }
 }
+
+@keyframes slideIn {
+  from {
+    transform: translateX(100%);
+    opacity: 0;
+  }
+  to {
+    transform: translateX(0);
+    opacity: 1;
+  }
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+

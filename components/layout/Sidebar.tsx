@@ -12,15 +12,18 @@ import {
   ChevronRight,
   PanelLeftClose,
   PanelLeftOpen,
+  PenTool,
 } from "lucide-react";
 import { useUiStore } from "@/lib/uiStore";
 
 const NAV_ITEMS = [
   { href: "/dashboard", label: "Dashboard",  icon: LayoutDashboard },
   { href: "/history",   label: "History",    icon: History },
+  { href: "/design",    label: "Design DB",  icon: PenTool },
   { href: "/connections", label: "Connections", icon: Database },
   { href: "/schema",    label: "Schema",     icon: TableProperties },
 ];
+
 
 export default function Sidebar() {
   const pathname = usePathname();

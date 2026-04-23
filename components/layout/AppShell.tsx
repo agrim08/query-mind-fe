@@ -2,6 +2,7 @@
 
 import { useEffect } from "react";
 import { useUser } from "@clerk/nextjs";
+import { usePathname } from "next/navigation";
 import { useConnectionStore } from "@/lib/store";
 import { useUiStore } from "@/lib/uiStore";
 import { getConnections, syncUser } from "@/lib/api";
@@ -14,6 +15,8 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
   const setConnections = useConnectionStore((s) => s.setConnections);
   const { isLoaded, isSignedIn, user } = useUser();
   const { isSidebarCollapsed, isMobileMenuOpen, closeMobileMenu } = useUiStore();
+  const pathname = usePathname();
+  const isFullWidthPage = pathname === "/design";
 
   // Body class effect removed, using className on div instead.
   
@@ -53,7 +56,7 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
         <Sidebar />
         <div className="main-content">
           <Topbar />
-          <main className="page-content">{children}</main>
+          <main className={`page-content ${isFullWidthPage ? "no-padding" : ""}`}>{children}</main>
         </div>
       </div>
     </ApiTokenProvider>
