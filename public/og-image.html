@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>QueryMind OG Image</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,800&family=Geist+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <style>
+    body {
+      margin: 0;
+      padding: 0;
+      width: 1200px;
+      height: 630px;
+      background-color: #080909;
+      background-image: radial-gradient(#27282b 1px, transparent 1px);
+      background-size: 20px 20px;
+      display: flex;
+      flex-direction: column;
+      position: relative;
+      overflow: hidden;
+      font-family: 'Bricolage Grotesque', sans-serif;
+    }
+    .logo-container {
+      position: absolute;
+      top: 60px;
+      left: 60px;
+    }
+    .main-content {
+      flex: 1;
+      display: flex;
+      align-items: center;
+      padding: 0 60px;
+      position: relative;
+    }
+    .headline {
+      font-size: 80px;
+      color: #f0f1f2;
+      line-height: 1.1;
+      letter-spacing: -0.04em;
+      max-width: 650px;
+      z-index: 2;
+    }
+    .highlight {
+      border-bottom: 6px solid #c8f04d;
+    }
+    .code-prop {
+      position: absolute;
+      right: 60px;
+      top: 50%;
+      transform: translateY(-50%);
+      background-color: #0e0f10;
+      border: 1px solid #27282b;
+      border-radius: 12px;
+      padding: 24px;
+      font-family: 'Geist Mono', monospace;
+      color: #8a8d93;
+      font-size: 18px;
+      line-height: 1.6;
+      box-shadow: 0 20px 40px rgba(0,0,0,0.5);
+      z-index: 1;
+      width: 360px;
+    }
+    .code-prop .keyword { color: #c8f04d; }
+    .code-prop .string { color: #34d399; }
+    .code-prop .variable { color: #f0f1f2; }
+    .bottom-strip {
+      position: absolute;
+      bottom: 60px;
+      left: 60px;
+      right: 60px;
+      display: flex;
+      justify-content: space-between;
+      color: #8a8d93;
+      font-family: 'Geist Mono', monospace;
+      font-size: 24px;
+    }
+  </style>
+</head>
+<body>
+  <div class="logo-container">
+    <svg width="240" height="48" viewBox="0 0 240 48" xmlns="http://www.w3.org/2000/svg">
+      <rect x="4" y="8" width="32" height="32" rx="8" fill="none" stroke="#f0f1f2" stroke-width="3"/>
+      <path d="M13 18l5 6-5 6M20 30h7" stroke="#c8f04d" stroke-width="3" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+      <text x="48" y="35" style="font-family: 'Bricolage Grotesque', sans-serif; font-weight: 800; font-size: 32px; fill: #f0f1f2; letter-spacing: -0.04em;">Query</text>
+      <text x="135" y="35" style="font-family: 'Bricolage Grotesque', sans-serif; font-weight: 800; font-size: 32px; fill: #c8f04d; letter-spacing: -0.04em;">Mind</text>
+    </svg>
+  </div>
+  
+  <div class="main-content">
+    <div class="headline">
+      Your database,<br>in <span class="highlight">plain English.</span>
+    </div>
+    
+    <div class="code-prop">
+      <div><span class="keyword">SELECT</span> <span class="variable">email</span>, <span class="variable">plan</span></div>
+      <div><span class="keyword">FROM</span> <span class="variable">users</span></div>
+      <div><span class="keyword">WHERE</span> <span class="variable">status</span> = <span class="string">'active'</span></div>
+      <div><span class="keyword">ORDER BY</span> <span class="variable">created_at</span> <span class="keyword">DESC</span></div>
+      <div><span class="keyword">LIMIT</span> <span class="variable">10</span>;</div>
+    </div>
+  </div>
+  
+  <div class="bottom-strip">
+    <span>Your database, in plain English.</span>
+    <span>querymind.app</span>
+  </div>
+</body>
+</html>

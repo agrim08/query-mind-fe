@@ -1,0 +1,13 @@
+<svg width="180" height="32" viewBox="0 0 180 32" xmlns="http://www.w3.org/2000/svg">
+  <defs>
+    <style>
+      @import url('https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,800&amp;display=swap');
+      .text-query { font-family: 'Bricolage Grotesque', sans-serif; font-weight: 800; font-size: 22px; fill: #f0f1f2; letter-spacing: -0.04em; }
+      .text-mind { font-family: 'Bricolage Grotesque', sans-serif; font-weight: 800; font-size: 22px; fill: #c8f04d; letter-spacing: -0.04em; }
+    </style>
+  </defs>
+  <rect x="2" y="2" width="28" height="28" rx="8" fill="none" stroke="#f0f1f2" stroke-width="2.5"/>
+  <path d="M10 11l4 5-4 5M16 21h6" stroke="#c8f04d" stroke-width="2.5" fill="none" stroke-linecap="round" stroke-linejoin="round"/>
+  <text x="40" y="24" class="text-query">Query</text>
+  <text x="100" y="24" class="text-mind">Mind</text>
+</svg>

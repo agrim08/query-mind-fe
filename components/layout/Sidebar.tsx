@@ -37,25 +37,27 @@ export default function Sidebar() {
       <Link href="/">
         <div
           style={{
-            padding: isSidebarCollapsed ? "20px 0" : "20px 16px 16px",
+            padding: isSidebarCollapsed ? "16px 0" : "20px 16px",
             borderBottom: "1px solid var(--border-subtle)",
             display: "flex",
             justifyContent: isSidebarCollapsed ? "center" : "flex-start",
             height: 70,
             alignItems: "center",
-            transition: "padding 0.3s ease",
+            transition: "all 0.3s ease",
           }}
         >
           {!isSidebarCollapsed ? (
-            <span
-              className="font-heading"
-              style={{ fontSize: "20px", color: "var(--text-primary)", letterSpacing: "-0.04em" }}
-            >
-              Query
-              <span style={{ color: "var(--accent)" }}>Mind</span>
-            </span>
+            <img 
+              src="/logo-horizontal.svg" 
+              alt="QueryMind" 
+              style={{ height: "26px", width: "auto" }}
+            />
           ) : (
-            <span style={{ color: "var(--accent)", fontWeight: 800, fontSize: "24px" }}>Q</span>
+            <img 
+              src="/logo-icon.svg" 
+              alt="Q" 
+              style={{ height: "32px", width: "32px" }}
+            />
           )}
         </div>
       </Link>

@@ -23,12 +23,9 @@ export default function LandingPage() {
 
       {/* ── Navbar ── */}
       <nav className="landing-nav">
-        <div className="landing-nav-logo">
-          <div className="logo-mark logo-mark-sm">Q</div>
-          <span className="font-heading logo-wordmark" style={{ fontSize: 18, color: "var(--text-primary)" }}>
-            Query<span className="logo-accent">Mind</span>
-          </span>
-        </div>
+        <Link href="/" className="landing-nav-logo">
+          <img src="/logo-horizontal.svg" alt="QueryMind" className="h-6 w-auto" />
+        </Link>
         <div className="landing-nav-actions">
           <SignedOut>
             <Link href="/sign-in" className="btn btn-ghost btn-sm">Sign In</Link>
@@ -53,14 +50,13 @@ export default function LandingPage() {
         </div>
 
         <h1 className="font-heading hero-title">
-          Query any database
+          Query your database
           <br />
           <span className="logo-accent">in plain English.</span>
         </h1>
 
         <p className="hero-description">
-          QueryMind converts natural language to accurate SQL, executes it against your PostgreSQL
-          database, and streams the results in real time.
+          Connect your database. Ask your question. Get the answer. No SQL. No developer. No waiting.
         </p>
 
         <div className="hero-cta-row">
@@ -179,9 +175,7 @@ export default function LandingPage() {
 
       {/* ── Footer ── */}
       <footer className="landing-footer">
-        <span className="font-heading landing-footer-brand">
-          Query<span className="logo-accent">Mind</span>
-        </span>
+        <img src="/logo-horizontal.svg" alt="QueryMind" style={{ height: "20px", width: "auto", opacity: 0.8 }} />
         <span className="landing-footer-copy">© 2025 QueryMind. All rights reserved.</span>
       </footer>
     </main>

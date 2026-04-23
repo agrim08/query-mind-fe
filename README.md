@@ -1,4 +1,6 @@
-# 🎨 QueryMind Frontend: The AI Data Interface
+# QueryMind Frontend
+
+**Your database, in plain English.**
 
 A high-performance, premium dashboard designed for effortless data exploration. Built with **Next.js 15** and **Tailwind CSS 4**, it provides a seamless bridge between natural language and database insights.
 

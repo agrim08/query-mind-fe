@@ -21,10 +21,7 @@ export default function AuthLayout({ children }: { children: React.ReactNode }) 
 
         {/* Logo */}
         <a href="/" className="auth-logo-link">
-          <div className="logo-mark logo-mark-md">Q</div>
-          <span className="font-heading logo-wordmark" style={{ fontSize: 20, color: "var(--text-primary)" }}>
-            Query<span className="logo-accent">Mind</span>
-          </span>
+          <img src="/logo-full.svg" alt="QueryMind" style={{ height: "32px", width: "auto" }} />
         </a>
 
         {/* Clerk component */}

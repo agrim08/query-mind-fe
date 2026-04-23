@@ -3,9 +3,12 @@ import { ClerkProvider } from "@clerk/nextjs";
 import "./globals.css";
 
 export const metadata: Metadata = {
-  title: "QueryMind — Natural Language SQL",
-  description: "Query any database in plain English. Powered by Gemini 2.5 Flash.",
+  title: "QueryMind — Your database, in plain English.",
+  description: "Connect your database. Ask your question. Get the answer. No SQL. No developer. No waiting.",
   metadataBase: new URL("https://querymind.app"),
+  icons: {
+    icon: "/favicon.svg",
+  },
 };
 
 export default function RootLayout({
