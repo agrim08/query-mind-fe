@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { useUser, useClerk } from "@clerk/nextjs";
+import { useUser, useClerk, useAuth } from "@clerk/nextjs";
 import {
   LayoutDashboard,
   History,
@@ -13,17 +13,94 @@ import {
   PanelLeftClose,
   PanelLeftOpen,
   PenTool,
+  CreditCard,
+  Zap,
+  Users,
 } from "lucide-react";
 import { useUiStore } from "@/lib/uiStore";
 
 const NAV_ITEMS = [
-  { href: "/dashboard", label: "Dashboard",  icon: LayoutDashboard },
-  { href: "/history",   label: "History",    icon: History },
-  { href: "/design",    label: "Design DB",  icon: PenTool },
+  { href: "/dashboard",   label: "Dashboard",   icon: LayoutDashboard },
+  { href: "/history",     label: "History",     icon: History },
+  { href: "/design",      label: "Design DB",   icon: PenTool },
   { href: "/connections", label: "Connections", icon: Database },
-  { href: "/schema",    label: "Schema",     icon: TableProperties },
+  { href: "/schema",      label: "Schema",      icon: TableProperties },
 ];
 
+function PlanBadge() {
+  const { has } = useAuth();
+
+  const isTeam = has?.({ feature: "team_tier" });
+  const isPro = has?.({ feature: "pro_tier" });
+
+  if (isTeam) {
+    return (
+      <span
+        style={{
+          fontSize: 9,
+          fontFamily: "Geist Mono, monospace",
+          fontWeight: 600,
+          color: "#60a5fa",
+          background: "rgba(96,165,250,0.1)",
+          border: "1px solid rgba(96,165,250,0.2)",
+          padding: "1px 6px",
+          borderRadius: 4,
+          display: "flex",
+          alignItems: "center",
+          gap: 3,
+          flexShrink: 0,
+        }}
+      >
+        <Users size={8} />
+        TEAM
+      </span>
+    );
+  }
+
+  if (isPro) {
+    return (
+      <span
+        style={{
+          fontSize: 9,
+          fontFamily: "Geist Mono, monospace",
+          fontWeight: 600,
+          color: "#c8f04d",
+          background: "rgba(200,240,77,0.08)",
+          border: "1px solid rgba(200,240,77,0.2)",
+          padding: "1px 6px",
+          borderRadius: 4,
+          display: "flex",
+          alignItems: "center",
+          gap: 3,
+          flexShrink: 0,
+        }}
+      >
+        <Zap size={8} />
+        PRO
+      </span>
+    );
+  }
+
+  return (
+    <Link
+      href="/billing"
+      style={{
+        fontSize: 9,
+        fontFamily: "Geist Mono, monospace",
+        fontWeight: 600,
+        color: "var(--text-tertiary)",
+        background: "var(--bg-overlay)",
+        border: "1px solid var(--border-subtle)",
+        padding: "1px 6px",
+        borderRadius: 4,
+        textDecoration: "none",
+        flexShrink: 0,
+      }}
+    >
+      FREE
+    </Link>
+  );
+}
 
 export default function Sidebar() {
   const pathname = usePathname();
@@ -47,15 +124,15 @@ export default function Sidebar() {
           }}
         >
           {!isSidebarCollapsed ? (
-            <img 
-              src="/logo-horizontal.svg" 
-              alt="QueryMind" 
+            <img
+              src="/logo-horizontal.svg"
+              alt="QueryMind"
               style={{ height: "26px", width: "auto" }}
             />
           ) : (
-            <img 
-              src="/logo-icon.svg" 
-              alt="Q" 
+            <img
+              src="/logo-icon.svg"
+              alt="Q"
               style={{ height: "32px", width: "32px" }}
             />
           )}
@@ -63,9 +140,18 @@ export default function Sidebar() {
       </Link>
 
       {/* Navigation */}
-      <nav style={{ flex: 1, paddingTop: "8px", display: "flex", flexDirection: "column", gap: "4px" }}>
+      <nav
+        style={{
+          flex: 1,
+          paddingTop: "8px",
+          display: "flex",
+          flexDirection: "column",
+          gap: "4px",
+        }}
+      >
         {NAV_ITEMS.map(({ href, label, icon: Icon }) => {
-          const active = pathname === href || pathname.startsWith(href + "/");
+          const active =
+            pathname === href || pathname.startsWith(href + "/");
           return (
             <Link
               key={href}
@@ -85,37 +171,72 @@ export default function Sidebar() {
             </Link>
           );
         })}
+
+        {/* Billing — separated with a subtle divider */}
+        <div
+          style={{
+            height: 1,
+            background: "var(--border-subtle)",
+            margin: "6px 12px",
+          }}
+        />
+        <Link
+          href="/billing"
+          onClick={closeMobileMenu}
+          className={`nav-item${pathname === "/billing" ? " active" : ""}`}
+          title={isSidebarCollapsed ? "Billing" : undefined}
+        >
+          <CreditCard
+            size={18}
+            strokeWidth={pathname === "/billing" ? 2 : 1.5}
+          />
+          <span className="sidebar-text">Billing</span>
+          {pathname === "/billing" && !isSidebarCollapsed && (
+            <ChevronRight
+              size={14}
+              style={{ marginLeft: "auto", color: "var(--accent)" }}
+            />
+          )}
+        </Link>
       </nav>
 
       {/* Collapse Toggle (Desktop Only) */}
-      <div 
+      <div
         className="hide-mobile"
-        style={{ 
-          padding: "8px", 
+        style={{
+          padding: "8px",
           borderTop: "1px solid var(--border-subtle)",
           display: "flex",
-          justifyContent: isSidebarCollapsed ? "center" : "flex-start"
+          justifyContent: isSidebarCollapsed ? "center" : "flex-start",
         }}
       >
         <button
           onClick={toggleSidebar}
           className="nav-item btn-ghost"
-          style={{ width: "100%", justifyContent: isSidebarCollapsed ? "center" : "flex-end", border: "none" }}
+          style={{
+            width: "100%",
+            justifyContent: isSidebarCollapsed ? "center" : "flex-end",
+            border: "none",
+          }}
           title={isSidebarCollapsed ? "Expand Sidebar" : "Collapse Sidebar"}
         >
-          {isSidebarCollapsed ? <PanelLeftOpen size={18} /> : <PanelLeftClose size={18} />}
+          {isSidebarCollapsed ? (
+            <PanelLeftOpen size={18} />
+          ) : (
+            <PanelLeftClose size={18} />
+          )}
         </button>
       </div>
 
       {/* User section */}
-      <div 
+      <div
         className="user-section"
-        style={{ 
-          borderTop: "1px solid var(--border-subtle)", 
+        style={{
+          borderTop: "1px solid var(--border-subtle)",
           padding: "12px 0 8px",
           display: "flex",
           flexDirection: "column",
-          gap: "4px"
+          gap: "4px",
         }}
       >
         <div
@@ -125,7 +246,7 @@ export default function Sidebar() {
             gap: "10px",
             padding: isSidebarCollapsed ? "0" : "8px 16px",
             justifyContent: isSidebarCollapsed ? "center" : "flex-start",
-            marginBottom: "4px"
+            marginBottom: "4px",
           }}
         >
           {/* Avatar */}
@@ -160,19 +281,37 @@ export default function Sidebar() {
               {user?.firstName?.[0] ?? "U"}
             </div>
           )}
-          
-          <div className="user-details" style={{ flex: 1, minWidth: 0, display: isSidebarCollapsed ? "none" : "block" }}>
+
+          <div
+            className="user-details"
+            style={{
+              flex: 1,
+              minWidth: 0,
+              display: isSidebarCollapsed ? "none" : "block",
+            }}
+          >
             <div
               style={{
-                fontSize: 12,
-                fontWeight: 500,
-                color: "var(--text-primary)",
-                overflow: "hidden",
-                textOverflow: "ellipsis",
-                whiteSpace: "nowrap",
+                display: "flex",
+                alignItems: "center",
+                gap: 6,
+                marginBottom: 3,
               }}
             >
-              {user?.firstName ?? "User"}
+              <div
+                style={{
+                  fontSize: 12,
+                  fontWeight: 500,
+                  color: "var(--text-primary)",
+                  overflow: "hidden",
+                  textOverflow: "ellipsis",
+                  whiteSpace: "nowrap",
+                  minWidth: 0,
+                }}
+              >
+                {user?.firstName ?? "User"}
+              </div>
+              <PlanBadge />
             </div>
             <div
               style={{
@@ -191,7 +330,13 @@ export default function Sidebar() {
         <button
           onClick={() => signOut({ redirectUrl: "/" })}
           className="nav-item"
-          style={{ width: "100%", border: "none", background: "none", textAlign: "left", justifyContent: isSidebarCollapsed ? "center" : "flex-start" }}
+          style={{
+            width: "100%",
+            border: "none",
+            background: "none",
+            textAlign: "left",
+            justifyContent: isSidebarCollapsed ? "center" : "flex-start",
+          }}
           title={isSidebarCollapsed ? "Sign out" : undefined}
         >
           <LogOut size={16} strokeWidth={1.5} />

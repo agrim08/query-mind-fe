@@ -13,6 +13,7 @@ import ToastProvider from "@/components/providers/ToastProvider";
 
 export default function AppShell({ children }: { children: React.ReactNode }) {
   const setConnections = useConnectionStore((s) => s.setConnections);
+  const setConnectionsLoading = useConnectionStore((s) => s.setConnectionsLoading);
   const { isLoaded, isSignedIn, user } = useUser();
   const { isSidebarCollapsed, isMobileMenuOpen, closeMobileMenu } = useUiStore();
   const pathname = usePathname();
@@ -36,15 +37,17 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
       }
 
       try {
+        setConnectionsLoading(true);
         const conns = await getConnections();
         setConnections(conns);
       } catch (err) {
         console.error("getConnections failed:", err);
+        setConnectionsLoading(false);
       }
     };
 
     init();
-  }, [isLoaded, isSignedIn, user, setConnections]);
+  }, [isLoaded, isSignedIn, user, setConnections, setConnectionsLoading]);
 
   return (
     <ApiTokenProvider>

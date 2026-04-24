@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { SignedIn, SignedOut, UserButton } from "@clerk/nextjs";
-import { ArrowRight, Database, Zap, Lock, Sparkles, LayoutTemplate, CheckCircle2, ChevronRight } from "lucide-react";
+import { ArrowRight, Database, Zap, Lock, Sparkles, LayoutTemplate, CheckCircle2, ChevronRight, Users } from "lucide-react";
 import { motion, useScroll, useTransform, AnimatePresence, Variants } from "framer-motion";
 import { useRef, useState, useEffect } from "react";
 
@@ -550,7 +550,7 @@ export default function LandingClient() {
 
         {/* Center links */}
         <nav style={{ display: "flex", gap: 4, margin: "0 auto" }}>
-          {["Features", "How it works", "Schema Designer"].map(l => (
+          {["Features", "How it works", "Pricing", "Schema Designer"].map(l => (
             <a key={l} href={`#${l.toLowerCase().replace(/ /g, "-")}`} style={{
               fontSize: 13, color: TEXT2, textDecoration: "none",
               padding: "6px 12px", borderRadius: 6,
@@ -881,7 +881,7 @@ export default function LandingClient() {
                   </div>
                 ))}
               </div>
-              <Link href="/dashboard/schema-designer" style={{
+              <Link href="/design" style={{
                 display: "inline-flex", alignItems: "center", gap: 8,
                 padding: "11px 20px", background: ELEVATED,
                 border: `1px solid ${BORDER}`, borderRadius: 8,
@@ -936,6 +936,220 @@ export default function LandingClient() {
               </svg>
             </motion.div>
           </motion.div>
+        </section>
+
+        {/* ── Pricing ── */}
+        <section id="pricing" style={{
+          background: SURFACE, borderTop: `1px solid ${BORDER}`, borderBottom: `1px solid ${BORDER}`,
+          position: "relative", overflow: "hidden",
+          padding: "clamp(80px, 10vw, 120px) clamp(20px, 5vw, 48px)",
+        }}>
+          <GridBg opacity={0.18} />
+          <div style={{ maxWidth: 1100, margin: "0 auto", position: "relative", zIndex: 1 }}>
+            <div style={{ textAlign: "center", marginBottom: 64 }}>
+              <SectionLabel>Pricing</SectionLabel>
+              <h2 style={{ ...HEADING, fontSize: "clamp(28px, 5vw, 54px)", marginBottom: 16 }}>
+                Simple, transparent pricing.
+              </h2>
+              <p style={{ fontSize: 17, color: TEXT2, maxWidth: 440, margin: "0 auto", lineHeight: 1.7 }}>
+                Start free. Upgrade when you need more power.
+              </p>
+            </div>
+
+            <motion.div
+              variants={stagger}
+              initial="hidden"
+              whileInView="show"
+              viewport={{ once: true, margin: "-60px" }}
+              style={{
+                display: "grid",
+                gridTemplateColumns: "repeat(auto-fit, minmax(280px, 1fr))",
+                gap: 20,
+                alignItems: "stretch",
+              }}
+            >
+              {/* Free */}
+              <motion.div variants={fadeUp} style={{
+                background: BG, border: `1px solid ${BORDER}`,
+                borderRadius: 20, padding: "32px 28px",
+                display: "flex", flexDirection: "column",
+              }}>
+                <div style={{ marginBottom: 24 }}>
+                  <div style={{ ...MONO, fontSize: 11, color: TEXT3, letterSpacing: "0.1em", textTransform: "uppercase" as const, marginBottom: 10 }}>Free</div>
+                  <div style={{ ...HEADING, fontSize: 40, color: TEXT1, lineHeight: 1, marginBottom: 4 }}>$0</div>
+                  <div style={{ ...MONO, fontSize: 11, color: TEXT3 }}>forever</div>
+                </div>
+                <ul style={{ listStyle: "none", padding: 0, margin: "0 0 28px", display: "flex", flexDirection: "column", gap: 10 }}>
+                  {[
+                    "1 database connection",
+                    "50 queries / month",
+                    "1 DB design / month",
+                    "Read-only query execution",
+                  ].map(f => (
+                    <li key={f} style={{ display: "flex", alignItems: "center", gap: 10, fontSize: 14, color: TEXT2 }}>
+                      <CheckCircle2 size={14} style={{ color: TEXT3, flexShrink: 0 }} />
+                      {f}
+                    </li>
+                  ))}
+                </ul>
+                <div style={{ marginTop: "auto" }}>
+                  <SignedOut>
+                    <Link href="/sign-up" style={{
+                      display: "block", textAlign: "center",
+                      padding: "11px 0", borderRadius: 8,
+                      background: ELEVATED, border: `1px solid ${BORDER}`,
+                      fontSize: 14, fontWeight: 600, color: TEXT1,
+                      textDecoration: "none", transition: "border-color 0.15s",
+                    }}
+                      onMouseEnter={e => { (e.currentTarget as HTMLElement).style.borderColor = TEXT3; }}
+                      onMouseLeave={e => { (e.currentTarget as HTMLElement).style.borderColor = BORDER; }}
+                    >
+                      Get started free
+                    </Link>
+                  </SignedOut>
+                  <SignedIn>
+                    <Link href="/dashboard" style={{
+                      display: "block", textAlign: "center",
+                      padding: "11px 0", borderRadius: 8,
+                      background: ELEVATED, border: `1px solid ${BORDER}`,
+                      fontSize: 14, fontWeight: 600, color: TEXT1,
+                      textDecoration: "none",
+                    }}>
+                      Go to Dashboard
+                    </Link>
+                  </SignedIn>
+                </div>
+              </motion.div>
+
+              {/* Pro — highlighted */}
+              <motion.div variants={fadeUp} style={{
+                background: BG,
+                border: `1px solid ${ACCENT}`,
+                boxShadow: `0 0 0 1px ${ACCENT}22, 0 24px 60px rgba(200,240,77,0.08)`,
+                borderRadius: 20, padding: "32px 28px",
+                display: "flex", flexDirection: "column",
+                position: "relative",
+              }}>
+                {/* Popular badge */}
+                <div style={{
+                  position: "absolute", top: -13, left: "50%", transform: "translateX(-50%)",
+                  background: ACCENT, color: BG,
+                  ...MONO, fontSize: 10, fontWeight: 700, letterSpacing: "0.1em",
+                  padding: "4px 14px", borderRadius: 9999,
+                  textTransform: "uppercase" as const, whiteSpace: "nowrap",
+                }}>
+                  Most popular
+                </div>
+                <div style={{ marginBottom: 24 }}>
+                  <div style={{ display: "flex", alignItems: "center", gap: 6, marginBottom: 10 }}>
+                    <Zap size={13} style={{ color: ACCENT }} />
+                    <span style={{ ...MONO, fontSize: 11, color: ACCENT, letterSpacing: "0.1em", textTransform: "uppercase" as const }}>Pro</span>
+                  </div>
+                  <div style={{ ...HEADING, fontSize: 40, color: TEXT1, lineHeight: 1, marginBottom: 4 }}>$12</div>
+                  <div style={{ ...MONO, fontSize: 11, color: TEXT3 }}>per month</div>
+                </div>
+                <ul style={{ listStyle: "none", padding: 0, margin: "0 0 28px", display: "flex", flexDirection: "column", gap: 10 }}>
+                  {[
+                    "5 database connections",
+                    "Unlimited queries",
+                    "6 DB designs / month",
+                    "CSV history export",
+                    "Everything in Free",
+                  ].map(f => (
+                    <li key={f} style={{ display: "flex", alignItems: "center", gap: 10, fontSize: 14, color: TEXT2 }}>
+                      <CheckCircle2 size={14} style={{ color: ACCENT, flexShrink: 0 }} />
+                      {f}
+                    </li>
+                  ))}
+                </ul>
+                <div style={{ marginTop: "auto" }}>
+                  <SignedOut>
+                    <Link href="/sign-up" style={{
+                      display: "flex", alignItems: "center", justifyContent: "center", gap: 7,
+                      padding: "12px 0", borderRadius: 8,
+                      background: ACCENT, color: BG,
+                      fontSize: 14, fontWeight: 700, textDecoration: "none",
+                      transition: "opacity 0.15s",
+                    }}
+                      onMouseEnter={e => { (e.currentTarget as HTMLElement).style.opacity = "0.88"; }}
+                      onMouseLeave={e => { (e.currentTarget as HTMLElement).style.opacity = "1"; }}
+                    >
+                      Get Pro <ArrowRight size={13} />
+                    </Link>
+                  </SignedOut>
+                  <SignedIn>
+                    <Link href="/billing" style={{
+                      display: "flex", alignItems: "center", justifyContent: "center", gap: 7,
+                      padding: "12px 0", borderRadius: 8,
+                      background: ACCENT, color: BG,
+                      fontSize: 14, fontWeight: 700, textDecoration: "none",
+                    }}>
+                      Upgrade to Pro <ArrowRight size={13} />
+                    </Link>
+                  </SignedIn>
+                </div>
+              </motion.div>
+
+              {/* Team */}
+              <motion.div variants={fadeUp} style={{
+                background: BG, border: `1px solid ${BORDER}`,
+                borderRadius: 20, padding: "32px 28px",
+                display: "flex", flexDirection: "column",
+              }}>
+                <div style={{ marginBottom: 24 }}>
+                  <div style={{ display: "flex", alignItems: "center", gap: 6, marginBottom: 10 }}>
+                    <Users size={13} style={{ color: INFO }} />
+                    <span style={{ ...MONO, fontSize: 11, color: INFO, letterSpacing: "0.1em", textTransform: "uppercase" as const }}>Team</span>
+                  </div>
+                  <div style={{ ...HEADING, fontSize: 40, color: TEXT1, lineHeight: 1, marginBottom: 4 }}>$39</div>
+                  <div style={{ ...MONO, fontSize: 11, color: TEXT3 }}>per month</div>
+                </div>
+                <ul style={{ listStyle: "none", padding: 0, margin: "0 0 28px", display: "flex", flexDirection: "column", gap: 10 }}>
+                  {[
+                    "Unlimited connections",
+                    "Unlimited queries",
+                    "Unlimited DB designs",
+                    "CSV + PDF history export",
+                    "Everything in Pro",
+                  ].map(f => (
+                    <li key={f} style={{ display: "flex", alignItems: "center", gap: 10, fontSize: 14, color: TEXT2 }}>
+                      <CheckCircle2 size={14} style={{ color: INFO, flexShrink: 0 }} />
+                      {f}
+                    </li>
+                  ))}
+                </ul>
+                <div style={{ marginTop: "auto" }}>
+                  <SignedOut>
+                    <Link href="/sign-up" style={{
+                      display: "flex", alignItems: "center", justifyContent: "center", gap: 7,
+                      padding: "11px 0", borderRadius: 8,
+                      background: "rgba(96,165,250,0.08)",
+                      border: "1px solid rgba(96,165,250,0.25)",
+                      fontSize: 14, fontWeight: 600, color: INFO,
+                      textDecoration: "none", transition: "opacity 0.15s",
+                    }}
+                      onMouseEnter={e => { (e.currentTarget as HTMLElement).style.opacity = "0.8"; }}
+                      onMouseLeave={e => { (e.currentTarget as HTMLElement).style.opacity = "1"; }}
+                    >
+                      Get Team <ArrowRight size={13} />
+                    </Link>
+                  </SignedOut>
+                  <SignedIn>
+                    <Link href="/billing" style={{
+                      display: "flex", alignItems: "center", justifyContent: "center", gap: 7,
+                      padding: "11px 0", borderRadius: 8,
+                      background: "rgba(96,165,250,0.08)",
+                      border: "1px solid rgba(96,165,250,0.25)",
+                      fontSize: 14, fontWeight: 600, color: INFO,
+                      textDecoration: "none",
+                    }}>
+                      Upgrade to Team <ArrowRight size={13} />
+                    </Link>
+                  </SignedIn>
+                </div>
+              </motion.div>
+            </motion.div>
+          </div>
         </section>
 
         {/* ── Testimonials ── */}

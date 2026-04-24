@@ -5,7 +5,9 @@ import type { Connection, HistoryEntry } from "@/lib/api";
 interface ConnectionStore {
   connections: Connection[];
   selectedId: string | null;
+  connectionsLoading: boolean;
   setConnections: (c: Connection[]) => void;
+  setConnectionsLoading: (loading: boolean) => void;
   selectConnection: (id: string) => void;
   addConnection: (c: Connection) => void;
   removeConnection: (id: string) => void;
@@ -14,8 +16,10 @@ interface ConnectionStore {
 export const useConnectionStore = create<ConnectionStore>((set) => ({
   connections: [],
   selectedId: null,
+  connectionsLoading: true,
   setConnections: (connections) =>
-    set({ connections, selectedId: connections[0]?.id ?? null }),
+    set({ connections, selectedId: connections[0]?.id ?? null, connectionsLoading: false }),
+  setConnectionsLoading: (connectionsLoading) => set({ connectionsLoading }),
   selectConnection: (selectedId) => set({ selectedId }),
   addConnection: (c) =>
     set((s) => ({

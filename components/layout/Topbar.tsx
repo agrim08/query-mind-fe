@@ -6,7 +6,7 @@ import { ChevronDown, Zap, Menu } from "lucide-react";
 import { useState, useRef, useEffect } from "react";
 
 export default function Topbar() {
-  const { connections, selectedId, selectConnection } = useConnectionStore();
+  const { connections, selectedId, selectConnection, connectionsLoading } = useConnectionStore();
   const [open, setOpen] = useState(false);
   const ref = useRef<HTMLDivElement>(null);
   const selected = connections.find((c) => c.id === selectedId);
@@ -34,6 +34,21 @@ export default function Topbar() {
 
       {/* Connection Selector */}
       <div className="dropdown" ref={ref}>
+        {connectionsLoading ? (
+          <div
+            className="btn btn-secondary btn-sm"
+            style={{ gap: "6px", minWidth: 160, cursor: "default", pointerEvents: "none" }}
+          >
+            <div
+              className="skeleton"
+              style={{ width: 12, height: 12, borderRadius: "50%", flexShrink: 0 }}
+            />
+            <div
+              className="skeleton"
+              style={{ flex: 1, height: 10, maxWidth: 100 }}
+            />
+          </div>
+        ) : (
         <button
           className="btn btn-secondary btn-sm"
           onClick={() => setOpen((o) => !o)}
@@ -61,6 +76,7 @@ export default function Topbar() {
             }}
           />
         </button>
+        )}
 
         {open && connections.length > 0 && (
           <div className="dropdown-menu">

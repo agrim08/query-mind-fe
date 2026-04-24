@@ -5,6 +5,7 @@ const isPublicRoute = createRouteMatcher([
   "/", // landing
   "/sign-in(.*)",
   "/sign-up(.*)",
+  "/pricing", // standalone pricing anchor (if ever used as a route)
 ]);
 
 // Next.js 16: must be named `proxy` (not `middleware`)
