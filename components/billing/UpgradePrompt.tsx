@@ -3,6 +3,7 @@
 import { useEffect } from "react";
 import Link from "next/link";
 import { Lock, Zap, Users, ArrowRight, X } from "lucide-react";
+import { PLANS } from "@/lib/plans";
 
 interface UpgradePromptProps {
   requiredPlan: "pro" | "team";
@@ -16,33 +17,22 @@ interface UpgradePromptProps {
 
 const PLAN_META = {
   pro: {
-    label: "Pro",
-    price: "$12/mo",
+    label: PLANS.pro.name,
+    price: `$${PLANS.pro.price}/mo`,
     color: "#c8f04d",
     bg: "rgba(200,240,77,0.06)",
     border: "rgba(200,240,77,0.2)",
     icon: Zap,
-    perks: [
-      "5 database connections",
-      "Unlimited queries",
-      "6 DB designs per month",
-      "CSV export",
-    ],
+    perks: PLANS.pro.perks,
   },
   team: {
-    label: "Team",
-    price: "$39/mo",
+    label: PLANS.team.name,
+    price: `$${PLANS.team.price}/mo`,
     color: "#60a5fa",
     bg: "rgba(96,165,250,0.06)",
     border: "rgba(96,165,250,0.2)",
     icon: Users,
-    perks: [
-      "Unlimited connections",
-      "Unlimited queries",
-      "Unlimited DB designs",
-      "CSV export",
-      "PDF history export",
-    ],
+    perks: PLANS.team.perks,
   },
 } as const;
 
@@ -125,7 +115,7 @@ export default function UpgradePrompt({
                   fontSize: 15,
                   fontWeight: 700,
                   color: "var(--text-primary)",
-                  fontFamily: "'Bricolage Grotesque', sans-serif",
+                  fontFamily: "var(--font-display)",
                 }}
               >
                 {title ?? defaultTitle}
@@ -141,7 +131,7 @@ export default function UpgradePrompt({
                 <span
                   style={{
                     fontSize: 11,
-                    fontFamily: "Geist Mono, monospace",
+                    fontFamily: "var(--font-mono)",
                     color: meta.color,
                     background: meta.bg,
                     border: `1px solid ${meta.border}`,
@@ -154,7 +144,7 @@ export default function UpgradePrompt({
                 <span
                   style={{
                     fontSize: 11,
-                    fontFamily: "Geist Mono, monospace",
+                    fontFamily: "var(--font-mono)",
                     color: "var(--text-tertiary)",
                   }}
                 >
@@ -339,21 +329,21 @@ export function UpgradeModal({
             <div>
               <div style={{
                 fontSize: 16, fontWeight: 700, color: "#f0f1f2",
-                fontFamily: "'Bricolage Grotesque', sans-serif",
+                fontFamily: "var(--font-display)",
                 marginBottom: 3,
               }}>
                 {title ?? defaultTitle}
               </div>
               <div style={{ display: "inline-flex", alignItems: "center", gap: 5 }}>
                 <span style={{
-                  fontSize: 11, fontFamily: "Geist Mono, monospace",
+                  fontSize: 11, fontFamily: "var(--font-mono)",
                   color: meta.color, background: meta.bg,
                   border: `1px solid ${meta.border}`,
                   padding: "1px 7px", borderRadius: 4,
                 }}>
                   {meta.label}
                 </span>
-                <span style={{ fontSize: 11, fontFamily: "Geist Mono, monospace", color: "#4d5057" }}>
+                <span style={{ fontSize: 11, fontFamily: "var(--font-mono)", color: "#4d5057" }}>
                   {meta.price}
                 </span>
               </div>
@@ -403,7 +393,7 @@ export function UpgradeModal({
 
           <p style={{
             marginTop: 12, fontSize: 11, color: "#4d5057",
-            fontFamily: "Geist Mono, monospace", textAlign: "center",
+            fontFamily: "var(--font-mono)", textAlign: "center",
           }}>
             Cancel anytime · Powered by Stripe
           </p>
@@ -433,7 +423,7 @@ export function PlanLockBadge({
         background: meta.bg,
         border: `1px solid ${meta.border}`,
         fontSize: 10,
-        fontFamily: "Geist Mono, monospace",
+        fontFamily: "var(--font-mono)",
         color: meta.color,
         verticalAlign: "middle",
         marginLeft: 6,
