@@ -13,8 +13,8 @@ const TEXT1    = "#f0f1f2";
 const TEXT2    = "#8a8d93";
 const TEXT3    = "#4d5057";
 const INFO     = "#60a5fa";
-const HEADING: React.CSSProperties = { fontFamily: "'Bricolage Grotesque', 'Helvetica Neue', sans-serif", fontWeight: 800, letterSpacing: "-0.04em" };
-const MONO:    React.CSSProperties = { fontFamily: "'Geist Mono', 'Courier New', monospace" };
+const HEADING: React.CSSProperties = { fontFamily: "var(--font-display)", fontWeight: 800, letterSpacing: "-0.04em" };
+const MONO:    React.CSSProperties = { fontFamily: "var(--font-mono)" };
 
 /* ─── Plan badge ─────────────────────────────────────────────────────────── */
 function CurrentPlanBadge() {
@@ -125,8 +125,8 @@ export default function BillingPage() {
               colorInputBackground:       "#141516",
               colorInputText:             "#f0f1f2",
               colorNeutral:               "#8a8d93",
-              fontFamily:                 "'Geist', sans-serif",
-              fontFamilyButtons:          "'Geist', sans-serif",
+              fontFamily:                 "var(--font-sans)",
+              fontFamilyButtons:          "var(--font-sans)",
               fontSize:                   "14px",
               borderRadius:               "14px",
             },
