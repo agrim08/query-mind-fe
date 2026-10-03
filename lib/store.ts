@@ -43,6 +43,7 @@ interface QueryResult {
   columns: string[];
   rowCount: number;
   execTimeMs: number;
+  truncated: boolean;
 }
 
 interface QueryStore {
