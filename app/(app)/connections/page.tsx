@@ -389,7 +389,7 @@ function ConnectionCard({
             style={{
               fontSize: 11,
               color: "var(--text-tertiary)",
-              fontFamily: "Geist Mono, monospace",
+              fontFamily: "var(--font-mono)",
             }}
           >
             Added {new Date(conn.created_at).toLocaleDateString()}
@@ -555,7 +555,7 @@ export default function ConnectionsPage() {
           <span
             style={{
               fontSize: 12,
-              fontFamily: "Geist Mono, monospace",
+              fontFamily: "var(--font-mono)",
               color: atLimit ? "var(--error)" : "var(--text-tertiary)",
             }}
           >
