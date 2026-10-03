@@ -5,8 +5,9 @@ import { useNodesState, useEdgesState, addEdge, Connection, Edge, Node, ReactFlo
 import { DesignerCanvas } from '@/components/design/DesignerCanvas';
 import { DesignSidebar } from '@/components/design/DesignSidebar';
 import { DesignHistory } from '@/components/design/DesignHistory';
-import { exportCanvasToPDF, exportToSQL } from '@/lib/exportUtils';
-import { generateSchema } from '@/lib/api';
+import { exportCanvasToPDF } from '@/lib/exportUtils';
+import { exportToSQL } from '@/lib/schemaSql';
+import { generateSchema, type DBSchemaDesign, type DesignTable } from '@/lib/api';
 import { History as HistoryIcon } from 'lucide-react';
 import toast from 'react-hot-toast';
 
@@ -28,23 +29,23 @@ export default function DesignPage() {
       const data = await generateSchema(prompt);
       loadSchemaToCanvas(data);
       toast.success("Database schema generated!");
-    } catch (err: any) {
-      toast.error(err.message || "Failed to generate schema");
+    } catch (err: unknown) {
+      toast.error(err instanceof Error && err.message ? err.message : "Failed to generate schema");
     } finally {
       setIsGenerating(false);
     }
   };
 
-  const loadSchemaToCanvas = (data: any) => {
+  const loadSchemaToCanvas = (data: DBSchemaDesign) => {
     // Auto-layout simple spacing
-    const newNodes = data.tables.map((table: any, index: number) => ({
+    const newNodes: Node[] = data.tables.map((table, index) => ({
       id: table.id,
       type: 'table',
       position: { x: (index % 3) * 350 + 100, y: Math.floor(index / 3) * 300 + 100 },
       data: table
     }));
 
-    const newEdges = data.edges.map((edge: any) => ({
+    const newEdges: Edge[] = data.edges.map((edge) => ({
       id: edge.id,
       source: edge.source,
       target: edge.target,
@@ -56,7 +57,7 @@ export default function DesignPage() {
     setEdges(newEdges);
   };
 
-  const updateTableData = (nodeId: string, newData: any) => {
+  const updateTableData = (nodeId: string, newData: DesignTable) => {
     setNodes((nds) =>
       nds.map((n) => {
         if (n.id === nodeId) {
@@ -68,7 +69,7 @@ export default function DesignPage() {
   };
 
   const handleExportSQL = () => {
-    const rawTables = nodes.map(n => n.data);
+    const rawTables = nodes.map(n => n.data as DesignTable);
     const sqlString = exportToSQL(rawTables, edges);
     
     // Download logic
