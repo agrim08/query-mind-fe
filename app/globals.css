@@ -1,5 +1,30 @@
-@import url("https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,800&family=Geist:wght@300;400;500;600&family=Geist+Mono:wght@400;500&display=swap");
 @import "tailwindcss";
+
+/* Fonts are loaded by next/font in app/layout.tsx (variables --qm-font-*). */
+@theme {
+  --font-sans: var(--qm-font-sans), "Helvetica Neue", Helvetica, Arial, sans-serif;
+  --font-display: var(--qm-font-display), "Helvetica Neue", Helvetica, sans-serif;
+  --font-mono: var(--qm-font-mono), ui-monospace, "Courier New", monospace;
+}
+
+/* Expose the design tokens below as Tailwind colors: bg-surface, text-fg-muted, border-line, … */
+@theme inline {
+  --color-canvas: var(--bg-base);
+  --color-surface: var(--bg-surface);
+  --color-raised: var(--bg-raised);
+  --color-overlay: var(--bg-overlay);
+  --color-accent: var(--accent);
+  --color-fg: var(--text-primary);
+  --color-fg-muted: var(--text-secondary);
+  --color-fg-subtle: var(--text-tertiary);
+  --color-line: var(--border-default);
+  --color-line-subtle: var(--border-subtle);
+  --color-line-strong: var(--border-emphasis);
+  --color-ok: var(--success);
+  --color-danger: var(--error);
+  --color-warn: var(--warning);
+  --color-info: var(--info);
+}
 
 /* ═══════════════════════════════════════════════════
    QUERYMIND DESIGN TOKENS
@@ -125,44 +150,49 @@
 
 /* ═══════════════════════════════════════════════════
    BASE RESET
+   Must live in @layer base: unlayered rules beat every Tailwind
+   utility (those live in @layer utilities), so an unlayered
+   `* { margin: 0; padding: 0 }` would silently cancel p-*, m-*, mx-auto, space-y-*.
    ═══════════════════════════════════════════════════ */
-*,
-*::before,
-*::after {
-  box-sizing: border-box;
-  margin: 0;
-  padding: 0;
-}
+@layer base {
+  *,
+  *::before,
+  *::after {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+  }
 
-html {
-  -webkit-font-smoothing: antialiased;
-  -moz-osx-font-smoothing: grayscale;
-  font-size: 16px;
-}
+  html {
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    font-size: 16px;
+  }
 
-body {
-  background-color: var(--bg-base);
-  color: var(--text-primary);
-  font-family: "Geist", "Helvetica Neue", Helvetica, Arial, sans-serif;
-  line-height: 1.5;
-  min-height: 100vh;
+  body {
+    background-color: var(--bg-base);
+    color: var(--text-primary);
+    font-family: var(--font-sans);
+    line-height: 1.5;
+    min-height: 100vh;
+  }
 }
 
 /* ═══════════════════════════════════════════════════
    TYPOGRAPHY
    ═══════════════════════════════════════════════════ */
 .font-heading {
-  font-family: "Bricolage Grotesque", "Helvetica Neue", Helvetica, sans-serif;
+  font-family: var(--font-display);
   font-weight: 800;
   letter-spacing: -0.03em;
 }
 
 .font-body {
-  font-family: "Geist", "Helvetica Neue", Helvetica, sans-serif;
+  font-family: var(--font-sans);
 }
 
 .font-mono {
-  font-family: "Geist Mono", "Courier New", monospace;
+  font-family: var(--font-mono);
 }
 
 /* Type scale */
@@ -205,14 +235,14 @@ body {
 .text-mono-xs {
   font-size: 11px;
   line-height: 1.4;
-  font-family: "Geist Mono", monospace;
+  font-family: var(--font-mono);
   letter-spacing: 0.04em;
   text-transform: uppercase;
 }
 .text-mono-2xs {
   font-size: 10px;
   line-height: 1.4;
-  font-family: "Geist Mono", monospace;
+  font-family: var(--font-mono);
   letter-spacing: 0.06em;
   text-transform: uppercase;
 }
@@ -374,7 +404,7 @@ body {
   border-radius: var(--radius-btn);
   font-size: 13px;
   font-weight: 500;
-  font-family: "Geist", sans-serif;
+  font-family: var(--font-sans);
   cursor: pointer;
   transition: all 0.15s;
   border: 1px solid transparent;
@@ -454,7 +484,7 @@ body {
   border: 1px solid var(--border-default);
   border-radius: var(--radius-btn);
   color: var(--text-primary);
-  font-family: "Geist", sans-serif;
+  font-family: var(--font-sans);
   font-size: 14px;
   padding: var(--space-2) var(--space-3);
   outline: none;
@@ -478,7 +508,7 @@ body {
   border: 1px solid var(--border-default);
   border-radius: var(--radius-btn);
   color: var(--text-primary);
-  font-family: "Geist", sans-serif;
+  font-family: var(--font-sans);
   font-size: 14px;
   padding: var(--space-3) var(--space-4);
   outline: none;
@@ -525,7 +555,7 @@ body {
   gap: 4px;
   padding: 2px 6px;
   border-radius: var(--radius-chip);
-  font-family: "Geist Mono", monospace;
+  font-family: var(--font-mono);
   font-size: 10px;
   font-weight: 500;
   letter-spacing: 0.06em;
@@ -611,6 +641,11 @@ body {
   overflow: hidden;
 }
 
+/* Landing-page variant: pure black panel instead of the app's slate */
+.sql-block.sql-block--black {
+  background-color: #000;
+}
+
 .sql-block-header {
   display: flex;
   align-items: center;
@@ -621,7 +656,7 @@ body {
 }
 
 .sql-content {
-  font-family: "Geist Mono", "Courier New", monospace;
+  font-family: var(--font-mono);
   font-size: 13px;
   line-height: 1.7;
   padding: var(--space-4);
@@ -843,7 +878,7 @@ body {
 .results-table {
   width: 100%;
   border-collapse: collapse;
-  font-family: "Geist Mono", monospace;
+  font-family: var(--font-mono);
   font-size: 12px;
 }
 
@@ -1019,7 +1054,7 @@ select.input {
   box-shadow: 0 24px 64px rgba(0, 0, 0, 0.6) !important;
 }
 .cl-headerTitle {
-  font-family: "Bricolage Grotesque", sans-serif !important;
+  font-family: var(--font-display) !important;
   color: var(--text-primary) !important;
 }
 .cl-formButtonPrimary {
@@ -1130,7 +1165,7 @@ select.input {
   justify-content: center;
   border-radius: 7px;
   background: var(--accent);
-  font-family: "Bricolage Grotesque", sans-serif;
+  font-family: var(--font-display);
   font-weight: 800;
   color: #080909;
   letter-spacing: -0.04em;
@@ -1222,7 +1257,7 @@ select.input {
 .hero-badge-label {
   font-size: 11px;
   color: var(--accent);
-  font-family: "Geist Mono", monospace;
+  font-family: var(--font-mono);
   letter-spacing: 0.08em;
   text-transform: uppercase;
 }
@@ -1285,7 +1320,7 @@ select.input {
   margin-left: 10px;
   font-size: 11px;
   color: var(--text-tertiary);
-  font-family: "Geist Mono", monospace;
+  font-family: var(--font-mono);
 }
 
 .preview-window-body {
@@ -1331,7 +1366,7 @@ select.input {
   margin-bottom: 16px;
   font-size: 13px;
   color: var(--text-primary);
-  font-family: "Geist", sans-serif;
+  font-family: var(--font-sans);
   text-align: left;
 }
 
@@ -1350,7 +1385,7 @@ select.input {
   border: 1px solid var(--border-default);
   border-radius: 10px;
   padding: 14px;
-  font-family: "Geist Mono", monospace;
+  font-family: var(--font-mono);
   font-size: 11px;
   line-height: 1.9;
   text-align: left;
@@ -1362,7 +1397,7 @@ select.input {
   border-radius: 8px;
   overflow: hidden;
   font-size: 11px;
-  font-family: "Geist Mono", monospace;
+  font-family: var(--font-mono);
 }
 
 .preview-results-header {
@@ -1572,12 +1607,12 @@ select.input {
   margin-left: 8px;
   font-size: 11px;
   color: var(--text-tertiary);
-  font-family: "Geist Mono", monospace;
+  font-family: var(--font-mono);
 }
 
 .auth-terminal-body {
   padding: 16px 18px;
-  font-family: "Geist Mono", monospace;
+  font-family: var(--font-mono);
   font-size: 12px;
   line-height: 2;
 }
@@ -1796,6 +1831,88 @@ select.input {
 @keyframes fadeIn {
   from { opacity: 0; }
   to { opacity: 1; }
+}
+
+/* ═══════════════════════════════════════════════════
+   LANDING PAGE MOTION
+   ═══════════════════════════════════════════════════ */
+@keyframes qm-marquee {
+  from { transform: translateX(0); }
+  to { transform: translateX(calc(-50% - var(--marquee-gap, 0px) / 2)); }
+}
+
+@keyframes qm-beam-spin {
+  to { transform: rotate(360deg); }
+}
+
+@keyframes qm-caret {
+  0%, 50% { opacity: 1; }
+  51%, 100% { opacity: 0; }
+}
+
+.qm-marquee-track {
+  animation: qm-marquee var(--marquee-duration, 40s) linear infinite;
+}
+.qm-marquee-track[data-reverse="true"] {
+  animation-direction: reverse;
+}
+.qm-marquee:hover .qm-marquee-track {
+  animation-play-state: paused;
+}
+
+/* Soft fade at the edges of a horizontally scrolling strip */
+.qm-fade-x {
+  mask-image: linear-gradient(to right, transparent, #000 10%, #000 90%, transparent);
+}
+
+/* Dot grid that fades out toward the edges */
+.qm-dot-grid {
+  background-image: radial-gradient(var(--border-emphasis) 1px, transparent 1px);
+  background-size: 22px 22px;
+  mask-image: radial-gradient(ellipse 70% 60% at 30% 30%, #000 20%, transparent 75%);
+}
+
+/* White copy of the dot grid, revealed only inside a circle around the cursor.
+   Same 22px tile as .qm-dot-grid so the lit dots sit exactly on the grey ones. */
+.qm-dot-glow {
+  --glow-x: -9999px;
+  --glow-y: -9999px;
+  --glow-radius: 130px;
+  /* Dots only, at reduced strength: a quiet highlight, not a spotlight. */
+  background-image: radial-gradient(
+    color-mix(in srgb, var(--text-primary) 65%, transparent) 1.3px,
+    transparent 1.7px
+  );
+  background-size: 22px 22px;
+  mask-image: radial-gradient(
+    circle var(--glow-radius) at var(--glow-x) var(--glow-y),
+    #000 0%,
+    rgba(0, 0, 0, 0.55) 45%,
+    transparent 100%
+  );
+  opacity: 0;
+  transition: opacity 0.35s ease;
+}
+.qm-dot-glow[data-active="true"] {
+  opacity: 1;
+}
+
+.qm-caret {
+  display: inline-block;
+  width: 2px;
+  height: 1em;
+  margin-left: 1px;
+  vertical-align: text-bottom;
+  background: var(--accent);
+  animation: qm-caret 1s infinite;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .qm-marquee-track,
+  .qm-beam,
+  .qm-caret {
+    animation: none !important;
+  }
 }
 
 
