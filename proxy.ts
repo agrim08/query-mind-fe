@@ -6,6 +6,14 @@ const isPublicRoute = createRouteMatcher([
   "/sign-in(.*)",
   "/sign-up(.*)",
   "/pricing", // standalone pricing anchor (if ever used as a route)
+  // SEO + share metadata: must never redirect to sign-in, or crawlers and link previews break.
+  "/robots.txt",
+  "/sitemap.xml",
+  "/manifest.webmanifest",
+  "/opengraph-image(.*)",
+  "/twitter-image(.*)",
+  "/apple-icon(.*)",
+  "/icon(.*)",
 ]);
 
 // Next.js 16: must be named `proxy` (not `middleware`)
