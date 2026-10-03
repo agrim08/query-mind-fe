@@ -120,7 +120,7 @@ function ExportButtons({
         CSV
         {!canCsv && (
           <span style={{
-            fontSize: 9, fontFamily: "Geist Mono, monospace",
+            fontSize: 9, fontFamily: "var(--font-mono)",
             color: "#c8f04d", background: "rgba(200,240,77,0.08)",
             border: "1px solid rgba(200,240,77,0.2)",
             padding: "1px 5px", borderRadius: 3,
@@ -141,7 +141,7 @@ function ExportButtons({
         PDF
         {!canPdf && (
           <span style={{
-            fontSize: 9, fontFamily: "Geist Mono, monospace",
+            fontSize: 9, fontFamily: "var(--font-mono)",
             color: "#60a5fa", background: "rgba(96,165,250,0.08)",
             border: "1px solid rgba(96,165,250,0.2)",
             padding: "1px 5px", borderRadius: 3,
@@ -174,7 +174,7 @@ function HistoryRow({ entry }: { entry: HistoryEntry }) {
           </span>
         </td>
         <td style={{ maxWidth: 180 }}>
-          <span style={{ fontFamily: "Geist Mono, monospace", fontSize: 11, color: "var(--text-secondary)" }}>
+          <span style={{ fontFamily: "var(--font-mono)", fontSize: 11, color: "var(--text-secondary)" }}>
             {entry.generated_sql
               ? (entry.generated_sql.length > 40 ? entry.generated_sql.slice(0, 40) + "…" : entry.generated_sql)
               : "—"}
@@ -216,7 +216,7 @@ function HistoryRow({ entry }: { entry: HistoryEntry }) {
                   marginTop: 8, padding: "8px 12px",
                   background: "var(--error-dim)", border: "1px solid rgba(239,68,68,0.2)",
                   borderRadius: 8, fontSize: 12, color: "var(--error)",
-                  fontFamily: "Geist Mono, monospace",
+                  fontFamily: "var(--font-mono)",
                 }}>
                   {entry.error_message}
                 </div>
