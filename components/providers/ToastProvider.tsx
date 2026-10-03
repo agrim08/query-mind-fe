@@ -13,7 +13,7 @@ export default function ToastProvider() {
           border: "1px solid var(--border-default)",
           borderRadius: "var(--radius-card)",
           fontSize: "13px",
-          fontFamily: "'Geist', sans-serif",
+          fontFamily: "var(--font-sans)",
         },
         success: {
           iconTheme: { primary: "var(--success)", secondary: "var(--bg-raised)" },
