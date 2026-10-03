@@ -30,7 +30,7 @@ export default function SettingsPage() {
               colorInputBackground:   "var(--bg-overlay)",
               colorInputText:         "var(--text-primary)",
               borderRadius:           "10px",
-              fontFamily:             "Inter, sans-serif",
+              fontFamily:             "var(--font-sans)",
             },
             elements: {
               card:                   { boxShadow: "none", background: "transparent" },
