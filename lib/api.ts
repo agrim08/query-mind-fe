@@ -157,6 +157,8 @@ export interface QueryStreamEvent {
   columns?: string[];
   row_count?: number;
   exec_time_ms?: number;
+  /** True when the query had more rows than the backend cap (500); only the first 500 are sent. */
+  truncated?: boolean;
   message?: string;
 }
 
@@ -258,14 +260,41 @@ export async function getHistory(
 
 // ─── Design ─────────────────────────────────────────────────────────────────
 
+// Mirrors backend app/schemas/design.py. Edges go source = parent (PK) -> target = child (FK).
+export type DesignColumn = {
+  name: string;
+  type: string;
+  constraints?: string | null;
+  isPrimary?: boolean;
+  isForeign?: boolean;
+};
+
+export type DesignTable = {
+  id: string;
+  name: string;
+  columns: DesignColumn[];
+};
+
+export type DesignEdge = {
+  id: string;
+  source: string;
+  target: string;
+  label?: string | null;
+};
+
+export type DBSchemaDesign = {
+  tables: DesignTable[];
+  edges: DesignEdge[];
+};
+
 export interface DesignHistoryEntry {
   id: string;
   prompt: string;
-  schema_json: any;
+  schema_json: DBSchemaDesign;
   created_at: string;
 }
 
-export async function generateSchema(prompt: string): Promise<any> {
+export async function generateSchema(prompt: string): Promise<DBSchemaDesign> {
   const headers = await authHeaders();
   const res = await fetch(`${BASE}/design/generate-schema`, {
     method: "POST",
