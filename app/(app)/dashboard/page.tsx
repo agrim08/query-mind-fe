@@ -1,22 +1,23 @@
 "use client";
 
-import { useEffect, useRef, useState, useCallback } from "react";
+import { useRef, useCallback } from "react";
 import { useQueryStore, useConnectionStore } from "@/lib/store";
 import { streamQuery } from "@/lib/api";
 import { Send, RotateCcw, Download } from "lucide-react";
 import SqlBlock from "@/components/sql/SqlBlock";
-import { VirtuosoGrid } from "react-virtuoso";
 import toast from "react-hot-toast";
 
 // ─── Meta Bar ─────────────────────────────────────────────────────────────────
 function MetaBar({
   rowCount,
   execTimeMs,
+  truncated,
   columns,
   rows,
 }: {
   rowCount: number;
   execTimeMs: number;
+  truncated: boolean;
   columns: string[];
   rows: Record<string, unknown>[];
 }) {
@@ -43,6 +44,14 @@ function MetaBar({
       }}
     >
       <span className="badge badge-success">{rowCount} rows</span>
+      {truncated && (
+        <span
+          className="badge badge-warning"
+          title="Results are capped at 500 rows. Add a filter or ask for a summary to see everything."
+        >
+          showing first {rowCount}
+        </span>
+      )}
       <span className="badge badge-default">
         {execTimeMs < 1000 ? `${execTimeMs}ms` : `${(execTimeMs / 1000).toFixed(2)}s`}
       </span>
@@ -170,11 +179,13 @@ export default function DashboardPage() {
           if (event.type === "sql_chunk" && event.chunk) appendSqlChunk(event.chunk);
           if (event.type === "results") {
             setResult({
-              sql: streamingSql,
+              // Read from the store: the `streamingSql` closure is from before streaming began.
+              sql: useQueryStore.getState().streamingSql,
               rows: event.rows ?? [],
               columns: event.columns ?? [],
               rowCount: event.row_count ?? 0,
               execTimeMs: event.exec_time_ms ?? 0,
+              truncated: event.truncated ?? false,
             });
           }
           if (event.type === "error") setError(event.message ?? "Unknown error");
@@ -186,7 +197,7 @@ export default function DashboardPage() {
         setError(err.message);
       }
     }
-  }, [nlQuery, selectedId, startStream, appendSqlChunk, setResult, setError, streamingSql]);
+  }, [nlQuery, selectedId, startStream, appendSqlChunk, setResult, setError]);
 
   const handleKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
     if ((e.metaKey || e.ctrlKey) && e.key === "Enter") {
@@ -296,6 +307,7 @@ export default function DashboardPage() {
           <MetaBar
             rowCount={result.rowCount}
             execTimeMs={result.execTimeMs}
+            truncated={result.truncated}
             columns={result.columns}
             rows={result.rows}
           />
@@ -327,7 +339,7 @@ export default function DashboardPage() {
             background: "var(--error-dim)",
           }}
         >
-          <p style={{ fontSize: 13, color: "var(--error)", fontFamily: "Geist Mono, monospace" }}>
+          <p style={{ fontSize: 13, color: "var(--error)", fontFamily: "var(--font-mono)" }}>
             {error}
           </p>
         </div>
