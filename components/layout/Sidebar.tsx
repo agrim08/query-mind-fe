@@ -38,7 +38,7 @@ function PlanBadge() {
       <span
         style={{
           fontSize: 9,
-          fontFamily: "Geist Mono, monospace",
+          fontFamily: "var(--font-mono)",
           fontWeight: 600,
           color: "#60a5fa",
           background: "rgba(96,165,250,0.1)",
@@ -62,7 +62,7 @@ function PlanBadge() {
       <span
         style={{
           fontSize: 9,
-          fontFamily: "Geist Mono, monospace",
+          fontFamily: "var(--font-mono)",
           fontWeight: 600,
           color: "#c8f04d",
           background: "rgba(200,240,77,0.08)",
@@ -86,7 +86,7 @@ function PlanBadge() {
       href="/billing"
       style={{
         fontSize: 9,
-        fontFamily: "Geist Mono, monospace",
+        fontFamily: "var(--font-mono)",
         fontWeight: 600,
         color: "var(--text-tertiary)",
         background: "var(--bg-overlay)",
