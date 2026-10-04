@@ -29,6 +29,11 @@ schema indexing, accuracy evals) is [agrim08/query-mind-be](https://github.com/a
   or PDF.
 - **Design a new database** with the Schema Designer: describe it in plain English, get an editable
   ER diagram (React Flow), and export it as runnable PostgreSQL or a PDF.
+- **Teach it your business** on the Knowledge page: describe your business (type, paste or speak),
+  let the AI draft it from your schema, and review the definitions it extracts (what "revenue" or
+  "active customer" means for you). Mark good answers with 👍 so similar questions reuse them.
+- **Ask follow-ups** like "now only Europe" or "by month": the next question builds on the last answer
+  until you start a new topic. Starter questions fill the empty dashboard.
 - **Plans** (Free, Pro, Team) through Clerk Billing. Limits are enforced by the backend; the frontend
   only reflects them.
 
