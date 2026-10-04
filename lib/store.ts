@@ -1,5 +1,5 @@
 import { create } from "zustand";
-import type { Connection, HistoryEntry } from "@/lib/api";
+import type { AnswerPresentation, Connection, HistoryEntry } from "@/lib/api";
 
 // ─── Connection Store ────────────────────────────────────────────────────────
 interface ConnectionStore {
@@ -37,13 +37,22 @@ export const useConnectionStore = create<ConnectionStore>((set) => ({
 }));
 
 // ─── Query Store ─────────────────────────────────────────────────────────────
-interface QueryResult {
+export interface QueryResult {
   sql: string;
   rows: Record<string, unknown>[];
   columns: string[];
   rowCount: number;
   execTimeMs: number;
   truncated: boolean;
+  answer: AnswerPresentation | null;
+}
+
+/** A clarifying question waiting for the user's choice. */
+export interface PendingClarification {
+  questionId: string;
+  question: string;
+  options: string[];
+  understood: string | null;
 }
 
 interface QueryStore {
@@ -51,36 +60,39 @@ interface QueryStore {
   streamingSql: string;
   isStreaming: boolean;
   result: QueryResult | null;
+  clarification: PendingClarification | null;
+  /** A plain-text answer (questions about the database itself). */
+  message: string | null;
   error: string | null;
   setNlQuery: (q: string) => void;
   startStream: () => void;
   appendSqlChunk: (chunk: string) => void;
+  restartSql: () => void;
   setResult: (r: QueryResult) => void;
+  setClarification: (c: PendingClarification) => void;
+  setMessage: (m: string) => void;
   setError: (e: string) => void;
+  endStream: () => void;
   reset: () => void;
 }
 
+const EMPTY_ANSWER = { streamingSql: "", result: null, clarification: null, message: null, error: null };
+
 export const useQueryStore = create<QueryStore>((set) => ({
   nlQuery: "",
-  streamingSql: "",
   isStreaming: false,
-  result: null,
-  error: null,
+  ...EMPTY_ANSWER,
   setNlQuery: (nlQuery) => set({ nlQuery }),
-  startStream: () =>
-    set({ isStreaming: true, streamingSql: "", result: null, error: null }),
+  startStream: () => set({ isStreaming: true, ...EMPTY_ANSWER }),
   appendSqlChunk: (chunk) =>
     set((s) => ({ streamingSql: s.streamingSql + chunk })),
+  restartSql: () => set({ streamingSql: "" }),
   setResult: (result) => set({ isStreaming: false, result }),
+  setClarification: (clarification) => set({ isStreaming: false, clarification }),
+  setMessage: (message) => set({ isStreaming: false, message }),
   setError: (error) => set({ isStreaming: false, error }),
-  reset: () =>
-    set({
-      nlQuery: "",
-      streamingSql: "",
-      isStreaming: false,
-      result: null,
-      error: null,
-    }),
+  endStream: () => set({ isStreaming: false }),
+  reset: () => set({ nlQuery: "", isStreaming: false, ...EMPTY_ANSWER }),
 }));
 
 // ─── History Store ───────────────────────────────────────────────────────────

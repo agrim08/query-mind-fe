@@ -139,17 +139,55 @@ export function indexSchema(
 
 // ─── Query ───────────────────────────────────────────────────────────────────
 
+/** The kind of question, as the model classified it (backend reply_format.Intent). */
+export type AnswerIntent =
+  | "number" | "trend" | "ranking" | "breakdown" | "comparison" | "list" | "record" | "schema" | "other";
+
+/** How to draw a result (backend answer_presentation). Numbers are plain floats. */
+export type AnswerChart =
+  | { kind: "table" }
+  | { kind: "record" }
+  | { kind: "kpi"; items: { label: string; value: number; column: string }[] }
+  | {
+      kind: "line";
+      x_label: string;
+      labels: string[];
+      series: ChartSeries[];
+      /** False when the series are different measures: draw one panel each, never one axis. */
+      shared_axis: boolean;
+    }
+  | {
+      kind: "bar";
+      label_column: string;
+      labels: string[];
+      /** One panel per measure; the first is the one the rows are ranked by. */
+      series: ChartSeries[];
+    };
+
+export interface ChartSeries {
+  name: string;
+  values: (number | null)[];
+}
+
+export interface AnswerPresentation {
+  intent: AnswerIntent;
+  /** The question restated, e.g. "Top 5 customers by total spent". */
+  understood: string | null;
+  assumptions: string[];
+  /** The same question with another reasonable reading, to run with one click. */
+  alternatives: string[];
+  follow_ups: string[];
+  /** One sentence built from the data, e.g. "USA is highest with 13 (3 shown)." */
+  headline: string;
+  chart: AnswerChart;
+}
+
 export interface QueryStreamEvent {
-  // Backend sends: status, sql_chunk, results, error, done
-  type:
-    | "sql_chunk"
-    | "results"
-    | "error"
-    | "status"
-    | "done"
-    | "sql_done"
-    | "meta";
+  // Backend sends (query_pipeline.py): status, sql_chunk, retry, results, clarify, message,
+  // error, done. "retry": the SQL so far failed and is being rewritten; discard it.
+  type: "status" | "sql_chunk" | "retry" | "results" | "clarify" | "message" | "error" | "done";
   chunk?: string;
+  /** results: the executed statement (the streamed SQL without any model metadata). */
   sql?: string;
   // Rows arrive as list[list] from backend — we zip them in streamQuery
   rows?: Record<string, unknown>[];
@@ -158,11 +196,24 @@ export interface QueryStreamEvent {
   exec_time_ms?: number;
   /** True when the query had more rows than the backend cap (500); only the first 500 are sent. */
   truncated?: boolean;
+  answer?: AnswerPresentation;
+  /** clarify: a multiple-choice question; send the choice back with `clarification`. */
+  question?: string;
+  options?: string[];
+  question_id?: string;
+  understood?: string | null;
+  /** message: a plain answer about the database itself. */
+  text?: string;
   message?: string;
 }
 
+export interface ClarificationAnswer {
+  question_id: string;
+  answer: string;
+}
+
 export function streamQuery(
-  data: { nl_query: string; connection_id: string },
+  data: { nl_query: string; connection_id: string; clarification?: ClarificationAnswer },
   onEvent: (event: QueryStreamEvent) => void,
   signal?: AbortSignal,
 ): Promise<void> {
