@@ -1917,3 +1917,235 @@ select.input {
 }
 
 
+
+/* ─── Answers (dashboard): headline, charts, suggestions, clarification ────────
+   Series colours are the validated dark categorical palette (dataviz skill: adjacent
+   CVD ΔE ≥ 8.4, all ≥ 3:1 on --bg-surface). A single series uses the brand accent. */
+:root {
+  --series-1: #3987e5;
+  --series-2: #d95926;
+  --series-3: #199e70;
+  --series-4: #c98500;
+  --chart-grid: var(--border-subtle);
+  --chart-axis-text: var(--text-tertiary);
+}
+
+.answer-card {
+  padding: var(--space-5);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+}
+
+.answer-understood {
+  font-size: 12px;
+  color: var(--text-tertiary);
+  letter-spacing: 0.02em;
+}
+
+.answer-headline {
+  font-size: 17px;
+  line-height: 1.45;
+  color: var(--text-primary);
+  font-weight: 500;
+}
+
+.answer-assumptions {
+  font-size: 12px;
+  color: var(--text-secondary);
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.answer-message {
+  font-size: 15px;
+  line-height: 1.6;
+  color: var(--text-primary);
+}
+
+.kpi-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+  gap: var(--space-4);
+}
+
+.kpi-label {
+  font-size: 13px;
+  color: var(--text-secondary);
+  margin-bottom: var(--space-1);
+}
+
+.kpi-value {
+  font-size: 32px;
+  font-weight: 600;
+  color: var(--text-primary);
+  line-height: 1.1;
+  overflow-wrap: anywhere;
+}
+
+.kpi-value--hero {
+  font-size: 52px;
+}
+
+.chart-frame {
+  position: relative;
+  width: 100%;
+}
+
+.chart-frame svg {
+  display: block;
+  overflow: visible;
+}
+
+.chart-tooltip {
+  position: absolute;
+  pointer-events: none;
+  background: var(--bg-overlay);
+  border: 1px solid var(--border-default);
+  border-radius: var(--radius-btn);
+  padding: 6px 10px;
+  font-size: 12px;
+  color: var(--text-secondary);
+  white-space: nowrap;
+  z-index: 2;
+  transform: translate(-50%, calc(-100% - 10px));
+}
+
+.chart-tooltip strong {
+  color: var(--text-primary);
+  font-weight: 600;
+}
+
+.chart-tooltip-row {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.chart-key {
+  display: inline-block;
+  width: 12px;
+  height: 2px;
+  border-radius: 1px;
+  flex: none;
+}
+
+.chart-legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-3);
+  font-size: 12px;
+  color: var(--text-secondary);
+}
+
+.record-list {
+  display: grid;
+  grid-template-columns: minmax(120px, max-content) 1fr;
+  gap: 6px var(--space-5);
+  font-size: 13px;
+}
+
+.record-list dt {
+  color: var(--text-tertiary);
+}
+
+.record-list dd {
+  color: var(--text-primary);
+  overflow-wrap: anywhere;
+}
+
+.suggestion-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+  align-items: center;
+}
+
+.suggestion-row-label {
+  font-size: 12px;
+  color: var(--text-tertiary);
+  margin-right: var(--space-1);
+}
+
+.suggestion-chip {
+  font-size: 12px;
+  color: var(--text-secondary);
+  background: var(--bg-raised);
+  border: 1px solid var(--border-default);
+  border-radius: var(--radius-pill);
+  padding: 4px 12px;
+  cursor: pointer;
+  transition: border-color 0.15s, color 0.15s;
+  text-align: left;
+}
+
+.suggestion-chip:hover,
+.suggestion-chip:focus-visible {
+  border-color: var(--accent);
+  color: var(--text-primary);
+  outline: none;
+}
+
+.clarify-options {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+
+.clarify-option {
+  text-align: left;
+  font-size: 14px;
+  color: var(--text-primary);
+  background: var(--bg-raised);
+  border: 1px solid var(--border-default);
+  border-radius: var(--radius-btn);
+  padding: 10px 14px;
+  cursor: pointer;
+  transition: border-color 0.15s;
+}
+
+.clarify-option:hover,
+.clarify-option:focus-visible {
+  border-color: var(--accent);
+  outline: none;
+}
+
+.view-toggle {
+  display: inline-flex;
+  border: 1px solid var(--border-default);
+  border-radius: var(--radius-btn);
+  overflow: hidden;
+}
+
+.view-toggle button {
+  font-size: 12px;
+  padding: 4px 10px;
+  color: var(--text-secondary);
+  background: transparent;
+  border: none;
+  cursor: pointer;
+}
+
+.view-toggle button[aria-pressed="true"] {
+  background: var(--bg-overlay);
+  color: var(--text-primary);
+}
+
+/* Small multiples: one panel per measure, side by side when there's room. */
+.chart-panels {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  gap: var(--space-5);
+}
+
+.chart-panels figure {
+  margin: 0;
+  min-width: 0;
+}
+
+.chart-panel-title {
+  font-size: 13px;
+  color: var(--text-secondary);
+  margin-bottom: var(--space-2);
+}
