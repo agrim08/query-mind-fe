@@ -88,6 +88,8 @@ function StatusBadge({ status }: { status: string }) {
     success: { cls: "badge-success", label: "SUCCESS" },
     error:   { cls: "badge-error",   label: "ERROR" },
     pending: { cls: "badge-warning", label: "PENDING" },
+    validation_error: { cls: "badge-error", label: "NOT RUN" },
+    clarify: { cls: "badge-default", label: "ASKED YOU" },
   };
   const { cls, label } = map[status] ?? { cls: "badge-default", label: status.toUpperCase() };
   return <span className={`badge ${cls}`}>{label}</span>;

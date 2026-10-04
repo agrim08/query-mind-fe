@@ -1,147 +1,22 @@
 "use client";
 
-import { useRef, useCallback } from "react";
-import { useQueryStore, useConnectionStore } from "@/lib/store";
-import { streamQuery } from "@/lib/api";
-import { Send, RotateCcw, Download } from "lucide-react";
-import SqlBlock from "@/components/sql/SqlBlock";
+import { useCallback, useEffect, useRef } from "react";
+import { Send, RotateCcw } from "lucide-react";
 import toast from "react-hot-toast";
-
-// ─── Meta Bar ─────────────────────────────────────────────────────────────────
-function MetaBar({
-  rowCount,
-  execTimeMs,
-  truncated,
-  columns,
-  rows,
-}: {
-  rowCount: number;
-  execTimeMs: number;
-  truncated: boolean;
-  columns: string[];
-  rows: Record<string, unknown>[];
-}) {
-  const downloadCsv = () => {
-    const header = columns.join(",");
-    const csvRows = rows.map((r) =>
-      columns.map((c) => JSON.stringify(r[c] ?? "")).join(",")
-    );
-    const csv = [header, ...csvRows].join("\n");
-    const blob = new Blob([csv], { type: "text/csv" });
-    const a = document.createElement("a");
-    a.href = URL.createObjectURL(blob);
-    a.download = "querymind_results.csv";
-    a.click();
-  };
-
-  return (
-    <div
-      style={{
-        display: "flex",
-        alignItems: "center",
-        gap: 12,
-        padding: "8px 0",
-      }}
-    >
-      <span className="badge badge-success">{rowCount} rows</span>
-      {truncated && (
-        <span
-          className="badge badge-warning"
-          title="Results are capped at 500 rows. Add a filter or ask for a summary to see everything."
-        >
-          showing first {rowCount}
-        </span>
-      )}
-      <span className="badge badge-default">
-        {execTimeMs < 1000 ? `${execTimeMs}ms` : `${(execTimeMs / 1000).toFixed(2)}s`}
-      </span>
-      <span className="badge badge-default">{columns.length} columns</span>
-      <div style={{ flex: 1 }} />
-      <button className="btn btn-ghost btn-sm" onClick={downloadCsv} style={{ gap: 4 }}>
-        <Download size={12} />
-        CSV
-      </button>
-    </div>
-  );
-}
-
-// ─── Results Table ────────────────────────────────────────────────────────────
-// One table in one scroll container, so header and body always share column widths;
-// the header row stays visible while scrolling (sticky `th` in globals.css).
-function ResultsTable({
-  columns,
-  rows,
-}: {
-  columns: string[];
-  rows: Record<string, unknown>[];
-}) {
-  return (
-    <div className="card" style={{ overflow: "hidden", border: "1px solid var(--border-subtle)" }}>
-      <div style={{ maxHeight: 420, overflow: "auto" }}>
-        <table className="results-table">
-          <thead>
-            <tr>
-              {columns.map((col, c) => (
-                <th key={c}>{col}</th>
-              ))}
-            </tr>
-          </thead>
-          <tbody>
-            {rows.map((row, i) => (
-              <tr key={i}>
-                {columns.map((col, c) => (
-                  <td key={c} title={String(row[col] ?? "")}>
-                    {row[col] === null || row[col] === undefined ? (
-                      <span style={{ color: "var(--text-tertiary)", fontStyle: "italic" }}>NULL</span>
-                    ) : (
-                      String(row[col])
-                    )}
-                  </td>
-                ))}
-              </tr>
-            ))}
-          </tbody>
-        </table>
-      </div>
-    </div>
-  );
-}
+import { type ClarificationAnswer, streamQuery } from "@/lib/api";
+import { useConnectionStore, useQueryStore } from "@/lib/store";
+import AnswerView from "@/components/answer/AnswerView";
+import ClarifyPanel from "@/components/answer/ClarifyPanel";
+import SqlBlock from "@/components/sql/SqlBlock";
 
 // ─── Skeleton ─────────────────────────────────────────────────────────────────
 function DashboardSkeleton() {
   return (
     <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
-      {/* SQL block skeleton */}
-      <div className="sql-block" style={{ height: 140 }}>
-        <div className="sql-block-header">
-          <div className="skeleton" style={{ width: 80, height: 14 }} />
-        </div>
-        <div style={{ padding: 16, display: "flex", flexDirection: "column", gap: 8 }}>
-          {[100, 140, 60].map((w, i) => (
-            <div key={i} className="skeleton" style={{ width: w, height: 14 }} />
-          ))}
-        </div>
-      </div>
-      {/* Meta bar skeleton */}
-      <div style={{ display: "flex", gap: 8 }}>
-        {[60, 50, 80].map((w, i) => (
-          <div key={i} className="skeleton" style={{ width: w, height: 22 }} />
-        ))}
-      </div>
-      {/* Table skeleton */}
-      <div className="card" style={{ overflow: "hidden", height: 200 }}>
-        <div style={{ padding: "8px 12px", background: "var(--bg-raised)", display: "flex", gap: 20 }}>
-          {[80, 100, 120, 90].map((w, i) => (
-            <div key={i} className="skeleton" style={{ width: w, height: 12 }} />
-          ))}
-        </div>
-        {[...Array(4)].map((_, i) => (
-          <div key={i} style={{ padding: "9px 12px", display: "flex", gap: 20, borderTop: "1px solid var(--border-subtle)" }}>
-            {[80, 100, 120, 90].map((w, j) => (
-              <div key={j} className="skeleton" style={{ width: w, height: 12 }} />
-            ))}
-          </div>
-        ))}
+      <div className="card" style={{ padding: 20, display: "flex", flexDirection: "column", gap: 12 }}>
+        <div className="skeleton" style={{ width: 180, height: 12 }} />
+        <div className="skeleton" style={{ width: "70%", height: 18 }} />
+        <div className="skeleton" style={{ width: "100%", height: 160 }} />
       </div>
     </div>
   );
@@ -149,57 +24,105 @@ function DashboardSkeleton() {
 
 // ─── Main Dashboard ──────────────────────────────────────────────────────────
 export default function DashboardPage() {
-  const {
-    nlQuery, streamingSql, isStreaming, result, error,
-    setNlQuery, startStream, appendSqlChunk, setResult, setError, reset,
-  } = useQueryStore();
-  const { selectedId } = useConnectionStore();
+  const nlQuery = useQueryStore((s) => s.nlQuery);
+  const streamingSql = useQueryStore((s) => s.streamingSql);
+  const isStreaming = useQueryStore((s) => s.isStreaming);
+  const result = useQueryStore((s) => s.result);
+  const clarification = useQueryStore((s) => s.clarification);
+  const message = useQueryStore((s) => s.message);
+  const error = useQueryStore((s) => s.error);
+  const selectedId = useConnectionStore((s) => s.selectedId);
   const abortRef = useRef<AbortController | null>(null);
-  const textareaRef = useRef<HTMLTextAreaElement>(null);
+  const askedRef = useRef("");
 
-  const handleSubmit = useCallback(async () => {
-    if (!nlQuery.trim()) return;
-    if (!selectedId) {
-      toast.error("Please select a connection first");
-      return;
-    }
-    abortRef.current?.abort();
-    abortRef.current = new AbortController();
-    startStream();
+  useEffect(() => () => abortRef.current?.abort(), []);
 
-    try {
-      await streamQuery(
-        { nl_query: nlQuery, connection_id: selectedId },
-        (event) => {
-          if (event.type === "sql_chunk" && event.chunk) appendSqlChunk(event.chunk);
-          if (event.type === "results") {
-            setResult({
-              // Read from the store: the `streamingSql` closure is from before streaming began.
-              sql: useQueryStore.getState().streamingSql,
-              rows: event.rows ?? [],
-              columns: event.columns ?? [],
-              rowCount: event.row_count ?? 0,
-              execTimeMs: event.exec_time_ms ?? 0,
-              truncated: event.truncated ?? false,
-            });
-          }
-          if (event.type === "error") setError(event.message ?? "Unknown error");
-        },
-        abortRef.current.signal
-      );
-    } catch (err: unknown) {
-      if (err instanceof Error && err.name !== "AbortError") {
-        setError(err.message);
+  const ask = useCallback(
+    async (question: string, answer?: ClarificationAnswer) => {
+      const store = useQueryStore.getState();
+      if (!question.trim()) return;
+      if (!selectedId) {
+        toast.error("Please select a connection first");
+        return;
       }
-    }
-  }, [nlQuery, selectedId, startStream, appendSqlChunk, setResult, setError]);
+      abortRef.current?.abort();
+      const controller = new AbortController();
+      abortRef.current = controller;
+      askedRef.current = question;
+      store.startStream();
+
+      try {
+        await streamQuery(
+          { nl_query: question, connection_id: selectedId, clarification: answer },
+          (event) => {
+            const s = useQueryStore.getState();
+            switch (event.type) {
+              case "retry":
+                s.restartSql();
+                break;
+              case "sql_chunk":
+                if (event.chunk) s.appendSqlChunk(event.chunk);
+                break;
+              case "results":
+                s.setResult({
+                  sql: event.sql ?? s.streamingSql,
+                  rows: event.rows ?? [],
+                  columns: event.columns ?? [],
+                  rowCount: event.row_count ?? 0,
+                  execTimeMs: event.exec_time_ms ?? 0,
+                  truncated: event.truncated ?? false,
+                  answer: event.answer ?? null,
+                });
+                break;
+              case "clarify":
+                if (event.question_id && event.question && event.options) {
+                  s.setClarification({
+                    questionId: event.question_id,
+                    question: event.question,
+                    options: event.options,
+                    understood: event.understood ?? null,
+                  });
+                }
+                break;
+              case "message":
+                s.setMessage(event.text ?? "");
+                break;
+              case "error":
+                s.setError(event.message ?? "Something went wrong. Please try again.");
+                break;
+              case "done":
+                s.endStream();
+                break;
+            }
+          },
+          controller.signal,
+        );
+        useQueryStore.getState().endStream();
+      } catch (err: unknown) {
+        if (err instanceof Error && err.name !== "AbortError") {
+          useQueryStore.getState().setError(err.message);
+        }
+      }
+    },
+    [selectedId],
+  );
+
+  const askSuggestion = useCallback(
+    (question: string) => {
+      useQueryStore.getState().setNlQuery(question);
+      void ask(question);
+    },
+    [ask],
+  );
 
   const handleKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
     if ((e.metaKey || e.ctrlKey) && e.key === "Enter") {
       e.preventDefault();
-      handleSubmit();
+      void ask(nlQuery);
     }
   };
+
+  const hasAnswer = Boolean(result || error || streamingSql || clarification || message);
 
   return (
     <div style={{ maxWidth: 900, margin: "0 auto" }}>
@@ -214,38 +137,35 @@ export default function DashboardPage() {
       </div>
 
       {/* Query input */}
-      <div
-        className="card-raised"
-        style={{ padding: 16, marginBottom: 20 }}
-      >
+      <div className="card-raised" style={{ padding: 16, marginBottom: 20 }}>
+        <label htmlFor="question" className="sr-only">
+          Your question
+        </label>
         <textarea
-          ref={textareaRef}
+          id="question"
           className="textarea"
           placeholder="Ask your database anything… e.g. &quot;Show me the top 10 users by order count this month&quot;"
           value={nlQuery}
-          onChange={(e) => setNlQuery(e.target.value)}
+          onChange={(e) => useQueryStore.getState().setNlQuery(e.target.value)}
           onKeyDown={handleKeyDown}
           rows={3}
           disabled={isStreaming}
           style={{ marginBottom: 12 }}
         />
         <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
-          <span
-            className="text-mono-xs"
-            style={{ color: "var(--text-tertiary)" }}
-          >
+          <span className="text-mono-xs" style={{ color: "var(--text-tertiary)" }}>
             ⌘ + Enter to run
           </span>
           <div style={{ display: "flex", gap: 8 }}>
-            {(result || error || streamingSql) && !isStreaming && (
-              <button className="btn btn-ghost btn-sm" onClick={reset} style={{ gap: 4 }}>
+            {hasAnswer && !isStreaming && (
+              <button className="btn btn-ghost btn-sm" onClick={() => useQueryStore.getState().reset()} style={{ gap: 4 }}>
                 <RotateCcw size={12} />
                 Reset
               </button>
             )}
             <button
               className="btn btn-primary"
-              onClick={handleSubmit}
+              onClick={() => void ask(nlQuery)}
               disabled={isStreaming || !nlQuery.trim()}
               style={{ gap: 6 }}
             >
@@ -273,8 +193,8 @@ export default function DashboardPage() {
             alignItems: "center",
             gap: 10,
             padding: "8px 12px",
-            background: "rgba(200, 240, 77, 0.05)",
-            border: "1px solid rgba(200, 240, 77, 0.15)",
+            background: "var(--accent-glow)",
+            border: "1px solid var(--border-default)",
             borderRadius: 8,
             marginBottom: 16,
           }}
@@ -282,45 +202,41 @@ export default function DashboardPage() {
         >
           <span className="streaming-dot" />
           <span style={{ fontSize: 13, color: "var(--accent)" }}>
-            {streamingSql ? "Receiving SQL…" : "Connecting to Gemini…"}
+            {streamingSql ? "Receiving SQL…" : "Thinking about your question…"}
           </span>
         </div>
       )}
 
-      {/* SQL block — show while streaming or done */}
-      {(streamingSql || isStreaming) && (
-        <div style={{ marginBottom: 16 }} className="animate-fade-up">
-          <SqlBlock sql={streamingSql} streaming={isStreaming} />
+      {/* Clarifying question */}
+      {clarification && !isStreaming && (
+        <div style={{ marginBottom: 16 }}>
+          <ClarifyPanel
+            clarification={clarification}
+            disabled={isStreaming}
+            onAnswer={(answer) => void ask(askedRef.current || nlQuery, { question_id: clarification.questionId, answer })}
+          />
         </div>
       )}
 
-      {/* Results */}
-      {isStreaming && !result && streamingSql && <DashboardSkeleton />}
+      {/* Plain answer (questions about the database itself) */}
+      {message && (
+        <div className="card answer-card animate-fade-up" style={{ marginBottom: 16 }}>
+          <p className="answer-message">{message}</p>
+        </div>
+      )}
 
+      {/* Answer: headline, chart, suggestions */}
+      {isStreaming && !result && streamingSql && <DashboardSkeleton />}
       {result && (
-        <div className="animate-fade-up" style={{ display: "flex", flexDirection: "column", gap: 12 }}>
-          <MetaBar
-            rowCount={result.rowCount}
-            execTimeMs={result.execTimeMs}
-            truncated={result.truncated}
-            columns={result.columns}
-            rows={result.rows}
-          />
-          {result.rows.length > 0 ? (
-            <ResultsTable columns={result.columns} rows={result.rows} />
-          ) : (
-            <div
-              className="card"
-              style={{
-                padding: 40,
-                textAlign: "center",
-                color: "var(--text-secondary)",
-                fontSize: 14,
-              }}
-            >
-              Query returned 0 rows.
-            </div>
-          )}
+        <div style={{ marginBottom: 16 }}>
+          <AnswerView result={result} onAsk={askSuggestion} busy={isStreaming} />
+        </div>
+      )}
+
+      {/* SQL — shown while streaming and under the answer, for transparency */}
+      {(streamingSql || (isStreaming && !clarification)) && (
+        <div style={{ marginBottom: 16 }} className="animate-fade-up">
+          <SqlBlock sql={result?.sql ?? streamingSql} streaming={isStreaming} />
         </div>
       )}
 
@@ -328,39 +244,19 @@ export default function DashboardPage() {
       {error && (
         <div
           className="card animate-fade-up"
-          style={{
-            padding: 16,
-            border: "1px solid rgba(239,68,68,0.2)",
-            background: "var(--error-dim)",
-          }}
+          style={{ padding: 16, border: "1px solid var(--error-dim)", background: "var(--error-dim)" }}
         >
-          <p style={{ fontSize: 13, color: "var(--error)", fontFamily: "var(--font-mono)" }}>
-            {error}
-          </p>
+          <p style={{ fontSize: 14, color: "var(--text-primary)" }}>{error}</p>
         </div>
       )}
 
       {/* Empty state */}
-      {!isStreaming && !result && !error && !streamingSql && (
-        <div
-          style={{
-            textAlign: "center",
-            padding: "60px 0",
-            color: "var(--text-tertiary)",
-          }}
-        >
-          <div
-            style={{
-              fontSize: 40,
-              marginBottom: 12,
-              opacity: 0.3,
-            }}
-          >
-            ⌗
-          </div>
-          <p style={{ fontSize: 14 }}>Your query results will appear here.</p>
+      {!isStreaming && !hasAnswer && (
+        <div style={{ textAlign: "center", padding: "60px 0", color: "var(--text-tertiary)" }}>
+          <div style={{ fontSize: 40, marginBottom: 12, opacity: 0.3 }}>⌗</div>
+          <p style={{ fontSize: 14 }}>Your answers will appear here.</p>
           <p style={{ fontSize: 12, marginTop: 4 }}>
-            Select a connection above, then type a question.
+            Select a connection above, then ask a question — or try &ldquo;What tables do I have?&rdquo;
           </p>
         </div>
       )}
