@@ -45,6 +45,17 @@ export interface QueryResult {
   execTimeMs: number;
   truncated: boolean;
   answer: AnswerPresentation | null;
+  /** The question's id: used to follow up on it or mark it verified. */
+  questionId: string | null;
+  /** Your verified question this answer was based on, when one was close. */
+  verifiedMatch: string | null;
+  knowledgeUsed: string[];
+}
+
+/** The answered question the next one follows up ("now only Europe"), until a new topic. */
+export interface ConversationAnchor {
+  questionId: string;
+  question: string;
 }
 
 /** A clarifying question waiting for the user's choice. */
@@ -64,6 +75,8 @@ interface QueryStore {
   /** A plain-text answer (questions about the database itself). */
   message: string | null;
   error: string | null;
+  conversation: ConversationAnchor | null;
+  setConversation: (c: ConversationAnchor | null) => void;
   setNlQuery: (q: string) => void;
   startStream: () => void;
   appendSqlChunk: (chunk: string) => void;
@@ -81,7 +94,9 @@ const EMPTY_ANSWER = { streamingSql: "", result: null, clarification: null, mess
 export const useQueryStore = create<QueryStore>((set) => ({
   nlQuery: "",
   isStreaming: false,
+  conversation: null,
   ...EMPTY_ANSWER,
+  setConversation: (conversation) => set({ conversation }),
   setNlQuery: (nlQuery) => set({ nlQuery }),
   startStream: () => set({ isStreaming: true, ...EMPTY_ANSWER }),
   appendSqlChunk: (chunk) =>
@@ -92,7 +107,7 @@ export const useQueryStore = create<QueryStore>((set) => ({
   setMessage: (message) => set({ isStreaming: false, message }),
   setError: (error) => set({ isStreaming: false, error }),
   endStream: () => set({ isStreaming: false }),
-  reset: () => set({ nlQuery: "", isStreaming: false, ...EMPTY_ANSWER }),
+  reset: () => set({ nlQuery: "", isStreaming: false, conversation: null, ...EMPTY_ANSWER }),
 }));
 
 // ─── History Store ───────────────────────────────────────────────────────────

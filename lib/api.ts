@@ -205,6 +205,10 @@ export interface QueryStreamEvent {
   /** message: a plain answer about the database itself. */
   text?: string;
   message?: string;
+  /** results: your own verified question this answer was based on, when one was close. */
+  verified_match?: string | null;
+  /** results: names of the business definitions given to the model. */
+  knowledge_used?: string[];
 }
 
 export interface ClarificationAnswer {
@@ -213,7 +217,13 @@ export interface ClarificationAnswer {
 }
 
 export function streamQuery(
-  data: { nl_query: string; connection_id: string; clarification?: ClarificationAnswer },
+  data: {
+    nl_query: string;
+    connection_id: string;
+    clarification?: ClarificationAnswer;
+    /** The earlier question this one follows up (its `question_id`). */
+    follow_up_of?: string;
+  },
   onEvent: (event: QueryStreamEvent) => void,
   signal?: AbortSignal,
 ): Promise<void> {
@@ -279,10 +289,12 @@ export interface HistoryEntry {
   /** Backend field name is generated_sql */
   generated_sql: string | null;
   connection_id: string;
-  status: "success" | "error" | "pending" | string;
+  status: "success" | "error" | "validation_error" | "clarify" | "pending";
   error_message: string | null;
   row_count: number | null;
   exec_time_ms: number | null;
+  /** The earlier question this one followed up on. */
+  follow_up_of: string | null;
   created_at: string;
 }
 
@@ -298,15 +310,95 @@ export async function getHistory(
   }
   const res = await fetch(url, { headers });
   if (!res.ok) throw new Error("Failed to fetch history");
-  const items = await res.json();
-  return {
-    items,
-    total:
-      items.length < pageSize
-        ? (page - 1) * pageSize + items.length
-        : page * pageSize + 1,
-  };
+  return res.json();
 }
+
+// ─── Knowledge (business context, definitions, verified answers) ────────────
+
+/** One JSON request; a non-2xx response throws with the backend's user-safe `detail`. */
+async function requestJson<T>(path: string, init: RequestInit = {}): Promise<T> {
+  const headers = await authHeaders();
+  const res = await fetch(`${BASE}${path}`, {
+    ...init,
+    headers: { "Content-Type": "application/json", ...headers, ...init.headers },
+  });
+  if (!res.ok) {
+    const err = await res.json().catch(() => ({}));
+    throw new Error(typeof err.detail === "string" ? err.detail : "Something went wrong. Please try again.");
+  }
+  return res.status === 204 ? (undefined as T) : res.json();
+}
+
+export type KnowledgeKind = "metric" | "term" | "filter" | "convention" | "table_note" | "clarification";
+
+export interface KnowledgeItem {
+  id: string;
+  kind: KnowledgeKind;
+  name: string;
+  definition: string;
+  /** ai = extracted at setup; user = written or edited by you; clarification = your earlier answer. */
+  source: "ai" | "user" | "clarification";
+  updated_at: string;
+}
+
+export interface VerifiedQuery {
+  id: string;
+  question: string;
+  sql: string;
+  created_at: string;
+}
+
+export interface Knowledge {
+  description: string;
+  starter_questions: string[];
+  items: KnowledgeItem[];
+  verified_queries: VerifiedQuery[];
+  /** AI setup calls (draft / extract) left today for this connection. */
+  setup_calls_left: number;
+}
+
+const knowledgePath = (connectionId: string) => `/connections/${connectionId}/knowledge`;
+
+export const getKnowledge = (connectionId: string) => requestJson<Knowledge>(knowledgePath(connectionId));
+
+export const saveDescription = (connectionId: string, description: string) =>
+  requestJson<Knowledge>(`${knowledgePath(connectionId)}/description`, {
+    method: "PUT",
+    body: JSON.stringify({ description }),
+  });
+
+/** An AI-written starting description from the schema (not saved). Uses a setup call. */
+export const draftDescription = (connectionId: string) =>
+  requestJson<{ description: string }>(`${knowledgePath(connectionId)}/draft`, { method: "POST" });
+
+/** Turn the saved description + schema into definitions and starter questions. Uses a setup call. */
+export const extractKnowledge = (connectionId: string) =>
+  requestJson<Knowledge>(`${knowledgePath(connectionId)}/extract`, { method: "POST" });
+
+export const addKnowledgeItem = (
+  connectionId: string,
+  item: { kind: KnowledgeKind; name: string; definition: string },
+) => requestJson<KnowledgeItem>(`${knowledgePath(connectionId)}/items`, { method: "POST", body: JSON.stringify(item) });
+
+export const updateKnowledgeItem = (
+  connectionId: string,
+  itemId: string,
+  changes: Partial<{ kind: KnowledgeKind; name: string; definition: string }>,
+) =>
+  requestJson<KnowledgeItem>(`${knowledgePath(connectionId)}/items/${itemId}`, {
+    method: "PATCH",
+    body: JSON.stringify(changes),
+  });
+
+export const deleteKnowledgeItem = (connectionId: string, itemId: string) =>
+  requestJson<void>(`${knowledgePath(connectionId)}/items/${itemId}`, { method: "DELETE" });
+
+export const deleteVerifiedQuery = (connectionId: string, verifiedId: string) =>
+  requestJson<void>(`${knowledgePath(connectionId)}/verified/${verifiedId}`, { method: "DELETE" });
+
+/** 👍: save an answered question and its SQL as verified for this connection. */
+export const verifyAnswer = (questionId: string) =>
+  requestJson<VerifiedQuery>(`/query/${questionId}/verify`, { method: "POST" });
 
 // ─── Design ─────────────────────────────────────────────────────────────────
 
