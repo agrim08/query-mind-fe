@@ -7,7 +7,7 @@ import {
   LayoutDashboard,
   History,
   Database,
-  TableProperties,
+  BookOpen,
   LogOut,
   ChevronRight,
   PanelLeftClose,
@@ -24,7 +24,7 @@ const NAV_ITEMS = [
   { href: "/history",     label: "History",     icon: History },
   { href: "/design",      label: "Design DB",   icon: PenTool },
   { href: "/connections", label: "Connections", icon: Database },
-  { href: "/schema",      label: "Schema",      icon: TableProperties },
+  { href: "/knowledge",   label: "Knowledge",   icon: BookOpen },
 ];
 
 function PlanBadge() {
