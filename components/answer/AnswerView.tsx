@@ -10,6 +10,7 @@ import MetaBar from "./MetaBar";
 import RecordCard from "./RecordCard";
 import ResultsTable from "./ResultsTable";
 import SuggestionChips from "./SuggestionChips";
+import VerifyButton from "./VerifyButton";
 
 interface AnswerViewProps {
   result: QueryResult;
@@ -62,17 +63,23 @@ export default function AnswerView({ result, onAsk, busy }: AnswerViewProps) {
             ))}
           </div>
         )}
+        {result.verifiedMatch && (
+          <div className="answer-assumptions">
+            <span>Based on your verified answer to &ldquo;{result.verifiedMatch}&rdquo;.</span>
+          </div>
+        )}
 
-        {hasVisual && (
-          <div style={{ display: "flex", justifyContent: "flex-end" }}>
-            <div className="view-toggle" role="group" aria-label="Answer view">
+        {(hasVisual || result.questionId) && (
+          <div style={{ display: "flex", justifyContent: "flex-end", alignItems: "center", gap: 8 }}>
+            {result.questionId && <VerifyButton questionId={result.questionId} />}
+            {hasVisual && <div className="view-toggle" role="group" aria-label="Answer view">
               <button type="button" aria-pressed={!showTable} onClick={() => setShowTable(false)}>
                 Chart
               </button>
               <button type="button" aria-pressed={showTable} onClick={() => setShowTable(true)}>
                 Table
               </button>
-            </div>
+            </div>}
           </div>
         )}
 
