@@ -5,8 +5,11 @@ import { Send, RotateCcw } from "lucide-react";
 import toast from "react-hot-toast";
 import { type ClarificationAnswer, streamQuery } from "@/lib/api";
 import { useConnectionStore, useQueryStore } from "@/lib/store";
+import Link from "next/link";
+import { useKnowledge } from "@/hooks/useKnowledge";
 import AnswerView from "@/components/answer/AnswerView";
 import ClarifyPanel from "@/components/answer/ClarifyPanel";
+import SuggestionChips from "@/components/answer/SuggestionChips";
 import SqlBlock from "@/components/sql/SqlBlock";
 
 // ─── Skeleton ─────────────────────────────────────────────────────────────────
@@ -32,6 +35,8 @@ export default function DashboardPage() {
   const message = useQueryStore((s) => s.message);
   const error = useQueryStore((s) => s.error);
   const selectedId = useConnectionStore((s) => s.selectedId);
+  const conversation = useQueryStore((s) => s.conversation);
+  const { knowledge } = useKnowledge(selectedId);
   const abortRef = useRef<AbortController | null>(null);
   const askedRef = useRef("");
 
@@ -49,11 +54,13 @@ export default function DashboardPage() {
       const controller = new AbortController();
       abortRef.current = controller;
       askedRef.current = question;
+      // A clarification answer continues its own question; anything else follows the thread.
+      const followUp = answer ? undefined : store.conversation?.questionId;
       store.startStream();
 
       try {
         await streamQuery(
-          { nl_query: question, connection_id: selectedId, clarification: answer },
+          { nl_query: question, connection_id: selectedId, clarification: answer, follow_up_of: followUp },
           (event) => {
             const s = useQueryStore.getState();
             switch (event.type) {
@@ -72,7 +79,12 @@ export default function DashboardPage() {
                   execTimeMs: event.exec_time_ms ?? 0,
                   truncated: event.truncated ?? false,
                   answer: event.answer ?? null,
+                  questionId: event.question_id ?? null,
+                  verifiedMatch: event.verified_match ?? null,
+                  knowledgeUsed: event.knowledge_used ?? [],
                 });
+                // The next question follows up on this one, until "New topic".
+                if (event.question_id) s.setConversation({ questionId: event.question_id, question });
                 break;
               case "clarify":
                 if (event.question_id && event.question && event.options) {
@@ -135,6 +147,22 @@ export default function DashboardPage() {
           Ask anything about your database in plain English.
         </p>
       </div>
+
+      {/* Conversation: the next question follows up on the last answer */}
+      {conversation && !isStreaming && (
+        <div className="suggestion-row" style={{ marginBottom: 8 }}>
+          <span className="suggestion-row-label">Following up on:</span>
+          <span style={{ fontSize: 13, color: "var(--text-secondary)" }}>&ldquo;{conversation.question}&rdquo;</span>
+          <button
+            type="button"
+            className="suggestion-chip"
+            onClick={() => useQueryStore.getState().setConversation(null)}
+            aria-label="Start a new topic instead of following up"
+          >
+            New topic
+          </button>
+        </div>
+      )}
 
       {/* Query input */}
       <div className="card-raised" style={{ padding: 16, marginBottom: 20 }}>
@@ -258,6 +286,20 @@ export default function DashboardPage() {
           <p style={{ fontSize: 12, marginTop: 4 }}>
             Select a connection above, then ask a question — or try &ldquo;What tables do I have?&rdquo;
           </p>
+          {knowledge && knowledge.starter_questions.length > 0 ? (
+            <div style={{ marginTop: 20, display: "flex", justifyContent: "center" }}>
+              <SuggestionChips label="Try:" questions={knowledge.starter_questions} onAsk={askSuggestion} />
+            </div>
+          ) : (
+            selectedId && (
+              <p style={{ fontSize: 12, marginTop: 16 }}>
+                <Link href="/knowledge" style={{ color: "var(--accent)" }}>
+                  Teach QueryMind about your business
+                </Link>{" "}
+                for answers that use your own definitions.
+              </p>
+            )
+          )}
         </div>
       )}
     </div>

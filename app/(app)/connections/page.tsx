@@ -23,6 +23,7 @@ import {
   Loader2,
 } from "lucide-react";
 import toast from "react-hot-toast";
+import IndexingContextPrompt from "@/components/knowledge/IndexingContextPrompt";
 import UpgradePrompt from "@/components/billing/UpgradePrompt";
 
 const PLAN_LIMITS = { free: 1, pro: 5 } as const;
@@ -435,6 +436,9 @@ function ConnectionCard({
           </p>
 
           {indexState.phase !== "idle" && <IndexingProgress state={indexState} />}
+          {indexState.phase !== "idle" && (
+            <IndexingContextPrompt connectionId={conn.id} phase={indexState.phase} />
+          )}
         </div>
 
         <div style={{ display: "flex", gap: 6, flexShrink: 0 }}>
