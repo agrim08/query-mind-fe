@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState, useCallback } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { useAuth } from "@clerk/nextjs";
 import { setTokenGetter } from "@/lib/api";
 
@@ -232,44 +232,82 @@ function AddConnectionModal({
   );
 }
 
-// ─── Index Progress ───────────────────────────────────────────────────────────
-function IndexingProgress({
-  connectionId,
-  onDone,
-}: {
-  connectionId: string;
-  onDone: () => void;
-}) {
-  const [status, setStatus] = useState("Starting indexing…");
-  const [progress, setProgress] = useState(0);
-  const [total, setTotal] = useState(0);
-  const [done, setDone] = useState(false);
-  const [error, setError] = useState(false);
+// ─── Schema indexing ──────────────────────────────────────────────────────────
+type IndexPhase = "idle" | "running" | "done" | "error";
 
+interface IndexState {
+  phase: IndexPhase;
+  message: string;
+  current: number;
+  total: number;
+}
+
+const IDLE: IndexState = { phase: "idle", message: "", current: 0, total: 0 };
+const DONE_VISIBLE_MS = 2500;
+
+/**
+ * Runs indexing when `start` is called (from a click), never from an effect: effects
+ * re-run on re-renders and on React's dev double-mount, which would cancel and restart
+ * the run. The only effect here cancels a run when the component unmounts.
+ */
+function useSchemaIndexing(connectionId: string) {
+  const [state, setState] = useState<IndexState>(IDLE);
+  const abortRef = useRef<AbortController | null>(null);
+
+  useEffect(() => () => abortRef.current?.abort(), []);
+
+  // A finished run's message stays briefly, then the card returns to idle.
   useEffect(() => {
-    const ac = new AbortController();
-    indexSchema(
-      connectionId,
-      (event) => {
-        if (event.type === "status") setStatus(event.message ?? "");
-        if (event.type === "progress") {
-          setProgress(event.current ?? 0);
-          setTotal(event.total ?? 0);
-        }
-        if (event.type === "done") {
-          setDone(true);
-          setStatus(`Indexed ${event.table_count} tables`);
-          setTimeout(onDone, 1500);
-        }
-        if (event.type === "error") {
-          setError(true);
-          setStatus(event.message ?? "Error");
-        }
-      },
-      ac.signal
-    ).catch(() => {});
-    return () => ac.abort();
-  }, [connectionId, onDone]);
+    if (state.phase !== "done") return;
+    const timer = setTimeout(() => setState(IDLE), DONE_VISIBLE_MS);
+    return () => clearTimeout(timer);
+  }, [state.phase]);
+
+  const start = useCallback(async () => {
+    abortRef.current?.abort();
+    const controller = new AbortController();
+    abortRef.current = controller;
+    setState({ phase: "running", message: "Starting indexing…", current: 0, total: 0 });
+
+    try {
+      await indexSchema(
+        connectionId,
+        (event) => {
+          if (event.type === "status") {
+            setState((s) => ({ ...s, message: event.message ?? s.message }));
+          } else if (event.type === "progress") {
+            setState((s) => ({ ...s, current: event.current ?? 0, total: event.total ?? 0 }));
+          } else if (event.type === "done") {
+            setState((s) => ({ ...s, phase: "done", message: `Indexed ${event.table_count ?? 0} tables` }));
+          } else if (event.type === "error") {
+            setState((s) => ({ ...s, phase: "error", message: event.message ?? "Indexing failed. Please try again." }));
+          }
+        },
+        controller.signal,
+      );
+      // The stream closed without a final event (e.g. the server restarted).
+      setState((s) =>
+        s.phase === "running"
+          ? { ...s, phase: "error", message: "Indexing stopped before it finished. Please try again." }
+          : s,
+      );
+    } catch (err) {
+      if (controller.signal.aborted) return;
+      setState((s) => ({
+        ...s,
+        phase: "error",
+        message: err instanceof Error ? err.message : "Indexing failed. Please try again.",
+      }));
+    }
+  }, [connectionId]);
+
+  return { state, start };
+}
+
+function IndexingProgress({ state }: { state: IndexState }) {
+  const { phase, message: status, current: progress, total } = state;
+  const done = phase === "done";
+  const error = phase === "error";
 
   return (
     <div style={{ marginTop: 10 }}>
@@ -331,7 +369,8 @@ function ConnectionCard({
   conn: Connection;
   onDeleted: () => void;
 }) {
-  const [indexing, setIndexing] = useState(false);
+  const { state: indexState, start: startIndexing } = useSchemaIndexing(conn.id);
+  const indexing = indexState.phase === "running";
   const [deleting, setDeleting] = useState(false);
 
   const handleDelete = async () => {
@@ -395,18 +434,13 @@ function ConnectionCard({
             Added {new Date(conn.created_at).toLocaleDateString()}
           </p>
 
-          {indexing && (
-            <IndexingProgress
-              connectionId={conn.id}
-              onDone={() => setIndexing(false)}
-            />
-          )}
+          {indexState.phase !== "idle" && <IndexingProgress state={indexState} />}
         </div>
 
         <div style={{ display: "flex", gap: 6, flexShrink: 0 }}>
           <button
             className="btn btn-secondary btn-sm"
-            onClick={() => setIndexing(true)}
+            onClick={startIndexing}
             disabled={indexing}
             style={{ gap: 4 }}
             data-tooltip="Re-index schema"
