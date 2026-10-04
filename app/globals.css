@@ -894,6 +894,7 @@
   border-bottom: 1px solid var(--border-default);
   position: sticky;
   top: 0;
+  z-index: 1; /* stay above scrolling rows */
   white-space: nowrap;
 }
 

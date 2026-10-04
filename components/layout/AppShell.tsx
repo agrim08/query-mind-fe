@@ -27,7 +27,6 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
     const init = async () => {
       try {
         await syncUser({
-          clerk_id: user.id,
           email: user.primaryEmailAddress?.emailAddress ?? "",
           full_name: user.fullName ?? undefined,
           avatar_url: user.imageUrl ?? undefined,
