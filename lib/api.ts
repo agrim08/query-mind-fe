@@ -13,8 +13,8 @@ async function authHeaders(): Promise<HeadersInit> {
 
 // ─── User ───────────────────────────────────────────────────────────────────
 
+/** Profile fields only — the backend takes the user id from the verified Clerk token. */
 export async function syncUser(data: {
-  clerk_id: string;
   email: string;
   full_name?: string | null;
   avatar_url?: string | null;
@@ -34,7 +34,6 @@ export async function syncUser(data: {
 export interface Connection {
   id: string;
   name: string;
-  pinecone_namespace: string | null;
   table_count: number | null;
   indexed_at: string | null;
   is_active: boolean;
