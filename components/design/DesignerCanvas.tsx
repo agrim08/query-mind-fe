@@ -1,15 +1,16 @@
-import React, { useCallback, useState } from 'react';
+import React from 'react';
 import {
   ReactFlow,
   MiniMap,
   Controls,
   Background,
-  useNodesState,
-  useEdgesState,
-  addEdge,
-  Connection,
-  Edge,
-  NodeTypes,
+  type Connection,
+  type Edge,
+  type Node,
+  type NodeMouseHandler,
+  type NodeTypes,
+  type OnEdgesChange,
+  type OnNodesChange,
 } from '@xyflow/react';
 import '@xyflow/react/dist/style.css';
 import { TableNode } from './TableNode';
@@ -19,12 +20,12 @@ const nodeTypes: NodeTypes = {
 };
 
 interface DesignerCanvasProps {
-  nodes: any[];
-  edges: any[];
-  onNodesChange: any;
-  onEdgesChange: any;
+  nodes: Node[];
+  edges: Edge[];
+  onNodesChange: OnNodesChange<Node>;
+  onEdgesChange: OnEdgesChange<Edge>;
   onConnect: (connection: Connection) => void;
-  onNodeClick: (event: React.MouseEvent, node: any) => void;
+  onNodeClick: NodeMouseHandler<Node>;
   onPaneClick: () => void;
 }
 
@@ -37,6 +38,7 @@ export function DesignerCanvas({
   onNodeClick,
   onPaneClick
 }: DesignerCanvasProps) {
+  const isEmpty = nodes.length === 0;
   return (
     <div style={{ width: '100%', height: '100%' }} id="capture-canvas">
       <ReactFlow
@@ -51,9 +53,21 @@ export function DesignerCanvas({
         fitView
       >
         <Controls />
-        <MiniMap zoomable pannable nodeColor={"var(--bg-overlay, #333)"} maskColor={"var(--bg-panel, #111)"} />
-        <Background color="#555" gap={16} />
+        {/* An empty minimap is just a dark box, so it appears with the first table. */}
+        {!isEmpty && (
+          <MiniMap
+            zoomable
+            pannable
+            nodeColor="var(--border-emphasis)"
+            nodeStrokeColor="var(--accent)"
+            maskColor="var(--minimap-mask)"
+          />
+        )}
+        <Background color="var(--border-emphasis)" gap={16} />
       </ReactFlow>
+      {isEmpty && (
+        <p className="canvas-empty-hint">Describe a database on the right and its tables appear here.</p>
+      )}
     </div>
   );
 }
