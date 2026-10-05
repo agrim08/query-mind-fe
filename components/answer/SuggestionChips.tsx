@@ -1,12 +1,12 @@
 interface SuggestionChipsProps {
   label: string;
   questions: string[];
-  onAsk: (question: string) => void;
+  onPick: (question: string) => void;
   disabled?: boolean;
 }
 
-/** One-click questions: other readings of this one ("Instead") or natural next ones. */
-export default function SuggestionChips({ label, questions, onAsk, disabled }: SuggestionChipsProps) {
+/** Suggested questions, put in the input on click: other readings of this one ("Instead") or natural next ones. */
+export default function SuggestionChips({ label, questions, onPick, disabled }: SuggestionChipsProps) {
   if (questions.length === 0) return null;
   return (
     <div className="suggestion-row">
@@ -16,7 +16,7 @@ export default function SuggestionChips({ label, questions, onAsk, disabled }: S
           key={question}
           type="button"
           className="suggestion-chip"
-          onClick={() => onAsk(question)}
+          onClick={() => onPick(question)}
           disabled={disabled}
         >
           {question}

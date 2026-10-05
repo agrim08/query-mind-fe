@@ -1,4 +1,11 @@
+"use client";
+
+import { useState } from "react";
 import { Download } from "lucide-react";
+import { downloadCsv } from "@/lib/csv";
+import { usePlan } from "@/lib/entitlements";
+import { UpgradeModal } from "@/components/billing/UpgradePrompt";
+import PlanLock from "@/components/billing/PlanLock";
 
 interface MetaBarProps {
   rowCount: number;
@@ -8,24 +15,18 @@ interface MetaBarProps {
   rows: Record<string, unknown>[];
 }
 
-/** RFC 4180 field: always quoted, quotes doubled; cells a spreadsheet would run as a formula are neutralised. */
-function csvField(value: unknown): string {
-  let text = value === null || value === undefined ? "" : String(value);
-  if (/^[=+\-@\t\r]/.test(text)) text = `'${text}`;
-  return `"${text.replace(/"/g, '""')}"`;
-}
-
-function downloadCsv(columns: string[], rows: Record<string, unknown>[]) {
-  const lines = [columns.map(csvField).join(","), ...rows.map((r) => columns.map((c) => csvField(r[c])).join(","))];
-  const url = URL.createObjectURL(new Blob([lines.join("\r\n")], { type: "text/csv" }));
-  const link = document.createElement("a");
-  link.href = url;
-  link.download = "querymind_results.csv";
-  link.click();
-  URL.revokeObjectURL(url);
-}
-
 export default function MetaBar({ rowCount, execTimeMs, truncated, columns, rows }: MetaBarProps) {
+  const { canCsv } = usePlan();
+  const [showUpgrade, setShowUpgrade] = useState(false);
+
+  const exportCsv = () => {
+    if (!canCsv) {
+      setShowUpgrade(true);
+      return;
+    }
+    downloadCsv("querymind_results.csv", columns, rows.map((row) => columns.map((column) => row[column])));
+  };
+
   return (
     <div style={{ display: "flex", alignItems: "center", gap: 12, padding: "8px 0" }}>
       <span className="badge badge-success">{rowCount} rows</span>
@@ -42,10 +43,19 @@ export default function MetaBar({ rowCount, execTimeMs, truncated, columns, rows
       </span>
       <span className="badge badge-default">{columns.length} columns</span>
       <div style={{ flex: 1 }} />
-      <button className="btn btn-ghost btn-sm" onClick={() => downloadCsv(columns, rows)} style={{ gap: 4 }}>
+      <button className="btn btn-ghost btn-sm" onClick={exportCsv} style={{ gap: 4 }} title={canCsv ? "Download as CSV" : "CSV export is on Pro"}>
         <Download size={12} />
         CSV
+        {!canCsv && <PlanLock plan="pro" />}
       </button>
+      {showUpgrade && (
+        <UpgradeModal
+          requiredPlan="pro"
+          title="CSV export is a Pro feature"
+          description="Download any answer as a spreadsheet-ready CSV file."
+          onClose={() => setShowUpgrade(false)}
+        />
+      )}
     </div>
   );
 }

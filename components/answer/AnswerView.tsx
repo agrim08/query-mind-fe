@@ -1,20 +1,18 @@
 "use client";
 
 import { useState } from "react";
-import type { AnswerChart } from "@/lib/api";
 import type { QueryResult } from "@/lib/store";
-import BarChart from "./BarChart";
-import KpiFigures from "./KpiFigures";
-import LineChart from "./LineChart";
+import ChartView, { drawableChart } from "./ChartView";
 import MetaBar from "./MetaBar";
-import RecordCard from "./RecordCard";
 import ResultsTable from "./ResultsTable";
 import SuggestionChips from "./SuggestionChips";
 import VerifyButton from "./VerifyButton";
 
 interface AnswerViewProps {
   result: QueryResult;
-  onAsk: (question: string) => void;
+  onPick: (question: string) => void;
+  /** Ask the model again when the answer reused an earlier one. */
+  onAskFresh?: () => void;
   busy?: boolean;
 }
 
@@ -24,28 +22,7 @@ interface AnswerViewProps {
  * chosen on the backend (answer_presentation.py); the table is always one click away, so no
  * value is reachable only through the chart.
  */
-/**
- * The chart, if its data has the shape this version draws; otherwise the table. An answer must
- * never crash the page, e.g. when the backend and frontend are briefly on different versions.
- */
-function drawableChart(chart: AnswerChart | undefined): AnswerChart {
-  if (!chart) return { kind: "table" };
-  switch (chart.kind) {
-    case "kpi":
-      return Array.isArray(chart.items) && chart.items.length > 0 ? chart : { kind: "table" };
-    case "line":
-    case "bar":
-      return Array.isArray(chart.labels) && Array.isArray(chart.series) && chart.series.length > 0
-        ? chart
-        : { kind: "table" };
-    case "record":
-      return chart;
-    default:
-      return { kind: "table" };
-  }
-}
-
-export default function AnswerView({ result, onAsk, busy }: AnswerViewProps) {
+export default function AnswerView({ result, onPick, onAskFresh, busy }: AnswerViewProps) {
   const answer = result.answer;
   const chart = drawableChart(answer?.chart);
   const hasVisual = chart.kind !== "table" && result.rows.length > 0;
@@ -61,6 +38,18 @@ export default function AnswerView({ result, onAsk, busy }: AnswerViewProps) {
             {answer.assumptions.map((a) => (
               <span key={a}>Assumed: {a}</span>
             ))}
+          </div>
+        )}
+        {result.reused && (
+          <div className="answer-assumptions">
+            <span>
+              Same query as when you asked this before, run on today&rsquo;s data.{" "}
+              {onAskFresh && (
+                <button type="button" className="answer-inline-action" onClick={onAskFresh} disabled={busy}>
+                  Write a new query
+                </button>
+              )}
+            </span>
           </div>
         )}
         {result.verifiedMatch && (
@@ -83,39 +72,12 @@ export default function AnswerView({ result, onAsk, busy }: AnswerViewProps) {
           </div>
         )}
 
-        {hasVisual && !showTable && chart.kind === "kpi" && <KpiFigures items={chart.items} />}
-        {hasVisual && !showTable && chart.kind === "line" && chart.shared_axis && (
-          <LineChart labels={chart.labels} series={chart.series} xLabel={chart.x_label} />
-        )}
-        {hasVisual && !showTable && chart.kind === "line" && !chart.shared_axis && (
-          // Different measures (e.g. revenue and order count) get a panel each: never one axis.
-          <div className="chart-panels">
-            {chart.series.map((s) => (
-              <figure key={s.name}>
-                <figcaption className="chart-panel-title">{s.name}</figcaption>
-                <LineChart labels={chart.labels} series={[s]} xLabel={chart.x_label} />
-              </figure>
-            ))}
-          </div>
-        )}
-        {hasVisual && !showTable && chart.kind === "bar" && (
-          <div className="chart-panels">
-            {chart.series.map((s) => (
-              <figure key={s.name}>
-                {chart.series.length > 1 && <figcaption className="chart-panel-title">{s.name}</figcaption>}
-                <BarChart labels={chart.labels} values={s.values} valueLabel={s.name} />
-              </figure>
-            ))}
-          </div>
-        )}
-        {hasVisual && !showTable && chart.kind === "record" && (
-          <RecordCard columns={result.columns} row={result.rows[0]} />
-        )}
+        {hasVisual && !showTable && <ChartView chart={chart} columns={result.columns} rows={result.rows} />}
 
         {answer && (
           <>
-            <SuggestionChips label="Instead:" questions={answer.alternatives} onAsk={onAsk} disabled={busy} />
-            <SuggestionChips label="Next:" questions={answer.follow_ups} onAsk={onAsk} disabled={busy} />
+            <SuggestionChips label="Instead:" questions={answer.alternatives} onPick={onPick} disabled={busy} />
+            <SuggestionChips label="Next:" questions={answer.follow_ups} onPick={onPick} disabled={busy} />
           </>
         )}
       </div>
