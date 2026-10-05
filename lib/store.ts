@@ -1,4 +1,5 @@
 import { create } from "zustand";
+import { persist } from "zustand/middleware";
 import type { AnswerPresentation, Connection, HistoryEntry } from "@/lib/api";
 
 // ─── Connection Store ────────────────────────────────────────────────────────
@@ -13,28 +14,47 @@ interface ConnectionStore {
   removeConnection: (id: string) => void;
 }
 
-export const useConnectionStore = create<ConnectionStore>((set) => ({
-  connections: [],
-  selectedId: null,
-  connectionsLoading: true,
-  setConnections: (connections) =>
-    set({ connections, selectedId: connections[0]?.id ?? null, connectionsLoading: false }),
-  setConnectionsLoading: (connectionsLoading) => set({ connectionsLoading }),
-  selectConnection: (selectedId) => set({ selectedId }),
-  addConnection: (c) =>
-    set((s) => ({
-      connections: [...s.connections, c],
-      selectedId: s.selectedId ?? c.id,
-    })),
-  removeConnection: (id) =>
-    set((s) => {
-      const rest = s.connections.filter((c) => c.id !== id);
-      return {
-        connections: rest,
-        selectedId: s.selectedId === id ? (rest[0]?.id ?? null) : s.selectedId,
-      };
+/**
+ * The selected connection only changes when the user picks one. It's remembered in this browser
+ * across reloads; loading the list keeps it while the user still owns it, and falls back to the
+ * first connection only when it's gone (deleted, or saved by another account).
+ * Hydrated by AppShell after mount (`skipHydration`), so server and first client render agree.
+ */
+export const useConnectionStore = create<ConnectionStore>()(
+  persist(
+    (set) => ({
+      connections: [],
+      selectedId: null,
+      connectionsLoading: true,
+      setConnections: (connections) =>
+        set((s) => ({
+          connections,
+          selectedId: connections.some((c) => c.id === s.selectedId) ? s.selectedId : (connections[0]?.id ?? null),
+          connectionsLoading: false,
+        })),
+      setConnectionsLoading: (connectionsLoading) => set({ connectionsLoading }),
+      selectConnection: (selectedId) => set({ selectedId }),
+      addConnection: (c) =>
+        set((s) => ({
+          connections: [...s.connections, c],
+          selectedId: s.selectedId ?? c.id,
+        })),
+      removeConnection: (id) =>
+        set((s) => {
+          const rest = s.connections.filter((c) => c.id !== id);
+          return {
+            connections: rest,
+            selectedId: s.selectedId === id ? (rest[0]?.id ?? null) : s.selectedId,
+          };
+        }),
     }),
-}));
+    {
+      name: "selected-connection",
+      partialize: (s) => ({ selectedId: s.selectedId }),
+      skipHydration: true,
+    },
+  ),
+);
 
 // ─── Query Store ─────────────────────────────────────────────────────────────
 export interface QueryResult {
@@ -50,6 +70,8 @@ export interface QueryResult {
   /** Your verified question this answer was based on, when one was close. */
   verifiedMatch: string | null;
   knowledgeUsed: string[];
+  /** The SQL came from an earlier answer to exactly this question. */
+  reused: boolean;
 }
 
 /** The answered question the next one follows up ("now only Europe"), until a new topic. */

@@ -1,12 +1,20 @@
 const BASE = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:8000/api/v1";
 
 let _getToken: (() => Promise<string | null>) | null = null;
+let _tokenGetterSet: () => void = () => {};
+// React runs a child's effects before its parent's, so a page can call the API before
+// ApiTokenProvider (in AppShell) registers the getter. Calls wait for it instead of going out unsigned.
+const _tokenGetterReady = new Promise<void>((resolve) => {
+  _tokenGetterSet = resolve;
+});
 
 export function setTokenGetter(fn: () => Promise<string | null>) {
   _getToken = fn;
+  _tokenGetterSet();
 }
 
 async function authHeaders(): Promise<HeadersInit> {
+  if (!_getToken) await _tokenGetterReady;
   const token = _getToken ? await _getToken() : null;
   return token ? { Authorization: `Bearer ${token}` } : {};
 }
@@ -209,6 +217,8 @@ export interface QueryStreamEvent {
   verified_match?: string | null;
   /** results: names of the business definitions given to the model. */
   knowledge_used?: string[];
+  /** results: the SQL came from an earlier answer to exactly this question (no new AI call). */
+  reused?: boolean;
 }
 
 export interface ClarificationAnswer {
@@ -223,6 +233,8 @@ export function streamQuery(
     clarification?: ClarificationAnswer;
     /** The earlier question this one follows up (its `question_id`). */
     follow_up_of?: string;
+    /** Ask the model again instead of reusing an earlier answer. */
+    fresh?: boolean;
   },
   onEvent: (event: QueryStreamEvent) => void,
   signal?: AbortSignal,
@@ -259,15 +271,7 @@ export function streamQuery(
                 Array.isArray(raw.rows) &&
                 Array.isArray(raw.columns)
               ) {
-                raw.rows = (raw.rows as unknown[][]).map((row: unknown[]) => {
-                  const obj: Record<string, unknown> = {};
-                  (raw.columns as string[]).forEach(
-                    (col: string, i: number) => {
-                      obj[col] = row[i];
-                    },
-                  );
-                  return obj;
-                });
+                raw.rows = rowsToRecords(raw.columns as string[], raw.rows as unknown[][]);
               }
               onEvent(raw);
             } catch {}
@@ -296,6 +300,12 @@ export interface HistoryEntry {
   /** The earlier question this one followed up on. */
   follow_up_of: string | null;
   created_at: string;
+  /** This answer is saved as verified (👍). */
+  verified: boolean;
+  /** The model's restatement of the question. */
+  understood: string | null;
+  /** The statement that ran, without QueryMind's comment lines. */
+  sql: string | null;
 }
 
 export async function getHistory(
@@ -314,6 +324,11 @@ export async function getHistory(
 }
 
 // ─── Knowledge (business context, definitions, verified answers) ────────────
+
+/** The backend sends rows as lists; components read them by column name. */
+function rowsToRecords(columns: string[], rows: unknown[][]): Record<string, unknown>[] {
+  return rows.map((row) => Object.fromEntries(columns.map((column, i) => [column, row[i]])));
+}
 
 /** One JSON request; a non-2xx response throws with the backend's user-safe `detail`. */
 async function requestJson<T>(path: string, init: RequestInit = {}): Promise<T> {
@@ -399,6 +414,23 @@ export const deleteVerifiedQuery = (connectionId: string, verifiedId: string) =>
 /** 👍: save an answered question and its SQL as verified for this connection. */
 export const verifyAnswer = (questionId: string) =>
   requestJson<VerifiedQuery>(`/query/${questionId}/verify`, { method: "POST" });
+
+/** The answer saved when a question was asked (mirrors AnswerSnapshotResponse). */
+export interface SavedAnswer {
+  answer: AnswerPresentation;
+  columns: string[];
+  /** The first rows (up to 50) of what the query returned. */
+  rows: Record<string, unknown>[];
+  /** Rows the query returned when it ran. */
+  row_count: number;
+  /** The query had more rows than the 500-row cap. */
+  truncated: boolean;
+}
+
+export async function getSavedAnswer(questionId: string): Promise<SavedAnswer> {
+  const saved = await requestJson<Omit<SavedAnswer, "rows"> & { rows: unknown[][] }>(`/query/${questionId}/answer`);
+  return { ...saved, rows: rowsToRecords(saved.columns, saved.rows) };
+}
 
 // ─── Design ─────────────────────────────────────────────────────────────────
 
