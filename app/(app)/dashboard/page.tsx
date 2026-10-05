@@ -1,16 +1,19 @@
 "use client";
 
-import { useCallback, useEffect, useRef } from "react";
+import { useCallback, useEffect, useRef, useSyncExternalStore } from "react";
 import { Send, RotateCcw } from "lucide-react";
 import toast from "react-hot-toast";
 import { type ClarificationAnswer, streamQuery } from "@/lib/api";
 import { useConnectionStore, useQueryStore } from "@/lib/store";
-import Link from "next/link";
 import { useKnowledge } from "@/hooks/useKnowledge";
 import AnswerView from "@/components/answer/AnswerView";
 import ClarifyPanel from "@/components/answer/ClarifyPanel";
-import SuggestionChips from "@/components/answer/SuggestionChips";
+import StarterQuestions from "@/components/answer/StarterQuestions";
 import SqlBlock from "@/components/sql/SqlBlock";
+
+// The run shortcut is ⌘ + Enter on a Mac and Ctrl + Enter elsewhere (both work).
+const noSubscription = () => () => {};
+const isMac = () => /Mac|iPhone|iPad/.test(navigator.userAgent);
 
 // ─── Skeleton ─────────────────────────────────────────────────────────────────
 function DashboardSkeleton() {
@@ -36,14 +39,19 @@ export default function DashboardPage() {
   const error = useQueryStore((s) => s.error);
   const selectedId = useConnectionStore((s) => s.selectedId);
   const conversation = useQueryStore((s) => s.conversation);
-  const { knowledge } = useKnowledge(selectedId);
+  const { knowledge, loading: knowledgeLoading } = useKnowledge(selectedId);
+  const connectionName = useConnectionStore((s) => s.connections.find((c) => c.id === s.selectedId)?.name ?? null);
+  const shortcutKey = useSyncExternalStore(noSubscription, () => (isMac() ? "⌘" : "Ctrl"), () => "Ctrl");
   const abortRef = useRef<AbortController | null>(null);
+  const inputRef = useRef<HTMLTextAreaElement>(null);
   const askedRef = useRef("");
+  // How the last question was asked, so "Write a new query" can ask it again the same way.
+  const lastFollowUpRef = useRef<string | undefined>(undefined);
 
   useEffect(() => () => abortRef.current?.abort(), []);
 
   const ask = useCallback(
-    async (question: string, answer?: ClarificationAnswer) => {
+    async (question: string, answer?: ClarificationAnswer, options: { fresh?: boolean; followUp?: string } = {}) => {
       const store = useQueryStore.getState();
       if (!question.trim()) return;
       if (!selectedId) {
@@ -55,12 +63,19 @@ export default function DashboardPage() {
       abortRef.current = controller;
       askedRef.current = question;
       // A clarification answer continues its own question; anything else follows the thread.
-      const followUp = answer ? undefined : store.conversation?.questionId;
+      const followUp = answer ? undefined : options.fresh ? options.followUp : store.conversation?.questionId;
+      lastFollowUpRef.current = followUp;
       store.startStream();
 
       try {
         await streamQuery(
-          { nl_query: question, connection_id: selectedId, clarification: answer, follow_up_of: followUp },
+          {
+            nl_query: question,
+            connection_id: selectedId,
+            clarification: answer,
+            follow_up_of: followUp,
+            fresh: options.fresh,
+          },
           (event) => {
             const s = useQueryStore.getState();
             switch (event.type) {
@@ -82,6 +97,7 @@ export default function DashboardPage() {
                   questionId: event.question_id ?? null,
                   verifiedMatch: event.verified_match ?? null,
                   knowledgeUsed: event.knowledge_used ?? [],
+                  reused: event.reused ?? false,
                 });
                 // The next question follows up on this one, until "New topic".
                 if (event.question_id) s.setConversation({ questionId: event.question_id, question });
@@ -119,13 +135,22 @@ export default function DashboardPage() {
     [selectedId],
   );
 
-  const askSuggestion = useCallback(
-    (question: string) => {
-      useQueryStore.getState().setNlQuery(question);
-      void ask(question);
-    },
-    [ask],
-  );
+  // The answer reused an earlier one; ask the model again (counts as a new question).
+  const askAgainFresh = useCallback(() => {
+    void ask(askedRef.current, undefined, { fresh: true, followUp: lastFollowUpRef.current });
+  }, [ask]);
+
+  // A suggestion goes into the input, not straight to the model: the user can edit it, and
+  // a stray click doesn't spend a question.
+  const pickSuggestion = useCallback((question: string) => {
+    useQueryStore.getState().setNlQuery(question);
+    requestAnimationFrame(() => {
+      const input = inputRef.current;
+      if (!input) return;
+      input.focus();
+      input.setSelectionRange(question.length, question.length);
+    });
+  }, []);
 
   const handleKeyDown = (e: React.KeyboardEvent<HTMLTextAreaElement>) => {
     if ((e.metaKey || e.ctrlKey) && e.key === "Enter") {
@@ -170,6 +195,7 @@ export default function DashboardPage() {
           Your question
         </label>
         <textarea
+          ref={inputRef}
           id="question"
           className="textarea"
           placeholder="Ask your database anything… e.g. &quot;Show me the top 10 users by order count this month&quot;"
@@ -182,7 +208,7 @@ export default function DashboardPage() {
         />
         <div style={{ display: "flex", alignItems: "center", justifyContent: "space-between" }}>
           <span className="text-mono-xs" style={{ color: "var(--text-tertiary)" }}>
-            ⌘ + Enter to run
+            {shortcutKey} + Enter to run
           </span>
           <div style={{ display: "flex", gap: 8 }}>
             {hasAnswer && !isStreaming && (
@@ -257,7 +283,7 @@ export default function DashboardPage() {
       {isStreaming && !result && streamingSql && <DashboardSkeleton />}
       {result && (
         <div style={{ marginBottom: 16 }}>
-          <AnswerView result={result} onAsk={askSuggestion} busy={isStreaming} />
+          <AnswerView result={result} onPick={pickSuggestion} onAskFresh={askAgainFresh} busy={isStreaming} />
         </div>
       )}
 
@@ -278,29 +304,18 @@ export default function DashboardPage() {
         </div>
       )}
 
-      {/* Empty state */}
-      {!isStreaming && !hasAnswer && (
-        <div style={{ textAlign: "center", padding: "60px 0", color: "var(--text-tertiary)" }}>
-          <div style={{ fontSize: 40, marginBottom: 12, opacity: 0.3 }}>⌗</div>
-          <p style={{ fontSize: 14 }}>Your answers will appear here.</p>
-          <p style={{ fontSize: 12, marginTop: 4 }}>
-            Select a connection above, then ask a question — or try &ldquo;What tables do I have?&rdquo;
-          </p>
-          {knowledge && knowledge.starter_questions.length > 0 ? (
-            <div style={{ marginTop: 20, display: "flex", justifyContent: "center" }}>
-              <SuggestionChips label="Try:" questions={knowledge.starter_questions} onAsk={askSuggestion} />
-            </div>
-          ) : (
-            selectedId && (
-              <p style={{ fontSize: 12, marginTop: 16 }}>
-                <Link href="/knowledge" style={{ color: "var(--accent)" }}>
-                  Teach QueryMind about your business
-                </Link>{" "}
-                for answers that use your own definitions.
-              </p>
-            )
-          )}
-        </div>
+      {/* Empty state: suggested questions right under the input */}
+      {!isStreaming && !hasAnswer && selectedId && !knowledgeLoading && (
+        <StarterQuestions
+          connectionName={connectionName}
+          questions={knowledge?.starter_questions ?? []}
+          onPick={pickSuggestion}
+        />
+      )}
+      {!isStreaming && !hasAnswer && !selectedId && (
+        <p className="starter-note" style={{ textAlign: "center", padding: "24px 0" }}>
+          Select a connection at the top right, then ask a question.
+        </p>
       )}
     </div>
   );
