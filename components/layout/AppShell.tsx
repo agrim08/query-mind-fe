@@ -19,8 +19,11 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
   const isFullWidthPage = pathname === "/design";
 
-  // Body class effect removed, using className on div instead.
-  
+  // Bring back the connection the user last selected, before the list loads.
+  useEffect(() => {
+    void useConnectionStore.persist.rehydrate();
+  }, []);
+
   useEffect(() => {
     if (!isLoaded || !isSignedIn || !user) return;
 
