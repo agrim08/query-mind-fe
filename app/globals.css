@@ -87,6 +87,8 @@
 
   /* Additional */
   --bg-panel: #0f1011;
+  /* Dims the part of the diagram outside the view in the canvas minimap (bg-base, see-through) */
+  --minimap-mask: rgba(8, 9, 9, 0.6);
 }
 
 /* ═══════════════════════════════════════════════════
@@ -102,6 +104,19 @@
 
 .react-flow__minimap svg {
   background-color: var(--bg-surface) !important;
+}
+
+.canvas-empty-hint {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: var(--space-6);
+  text-align: center;
+  font-size: 14px;
+  color: var(--text-tertiary);
+  pointer-events: none;
 }
 
 .react-flow__controls {
@@ -2148,4 +2163,474 @@ select.input {
   font-size: 13px;
   color: var(--text-secondary);
   margin-bottom: var(--space-2);
+}
+
+/* ─── Dashboard empty state: suggested questions under the input ─────────────── */
+.starter-section {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+}
+
+.starter-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-3);
+  font-size: 12px;
+  color: var(--text-tertiary);
+  letter-spacing: 0.02em;
+}
+
+.starter-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  color: var(--text-secondary);
+  transition: color 0.15s;
+}
+
+.starter-link:hover,
+.starter-link:focus-visible {
+  color: var(--accent);
+  outline: none;
+}
+
+.starter-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: var(--space-2);
+}
+
+.starter-card {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  text-align: left;
+  font-size: 14px;
+  line-height: 1.45;
+  color: var(--text-primary);
+  background: var(--bg-surface);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-card);
+  padding: 14px 16px;
+  cursor: pointer;
+  transition: border-color 0.15s, background 0.15s;
+}
+
+.starter-card span {
+  flex: 1;
+}
+
+.starter-card:hover,
+.starter-card:focus-visible {
+  border-color: var(--border-emphasis);
+  background: var(--bg-raised);
+  outline: none;
+}
+
+.starter-card-icon {
+  color: var(--text-tertiary);
+  margin-top: 3px;
+  flex: none;
+}
+
+.starter-card-arrow {
+  color: var(--text-tertiary);
+  margin-top: 3px;
+  flex: none;
+  transition: color 0.15s, transform 0.15s;
+}
+
+.starter-card:hover .starter-card-arrow,
+.starter-card:focus-visible .starter-card-arrow {
+  color: var(--accent);
+  transform: translate(1px, -1px);
+}
+
+.starter-note {
+  font-size: 12px;
+  color: var(--text-tertiary);
+}
+
+/* ─── History: questions grouped by day, details on demand ───────────────────── */
+.history-page {
+  max-width: 960px;
+  margin: 0 auto;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-6);
+}
+
+.history-header {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: var(--space-4);
+  flex-wrap: wrap;
+}
+
+.history-title {
+  font-size: 28px;
+  color: var(--text-primary);
+  margin-bottom: 6px;
+}
+
+.history-subtitle {
+  font-size: 14px;
+  color: var(--text-secondary);
+  font-variant-numeric: tabular-nums;
+}
+
+.history-controls {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  flex-wrap: wrap;
+}
+
+.history-controls .view-toggle button {
+  max-width: 180px;
+  padding: 6px 12px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.view-toggle button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.history-group {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+
+.history-day {
+  padding-left: var(--space-1);
+  font-family: var(--font-mono);
+  font-size: 11px;
+  font-weight: 500;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--text-tertiary);
+}
+
+.history-card {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.history-item + .history-item,
+.history-skeleton-row + .history-skeleton-row {
+  border-top: 1px solid var(--border-subtle);
+}
+
+.history-item {
+  transition: background-color 0.15s;
+}
+
+.history-item:hover,
+.history-item[data-open] {
+  background: var(--bg-raised);
+}
+
+.history-row {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  padding-right: var(--space-3);
+}
+
+.history-toggle {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  align-items: flex-start;
+  gap: var(--space-3);
+  padding: 14px var(--space-4);
+  background: none;
+  border: none;
+  color: inherit;
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+
+.history-toggle:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: -2px;
+  border-radius: var(--radius-btn);
+}
+
+.tone-success { color: var(--success); }
+.tone-warning { color: var(--warning); }
+.tone-error { color: var(--error); }
+.tone-info { color: var(--info); }
+.tone-muted { color: var(--text-tertiary); }
+
+.history-dot {
+  flex: none;
+  width: 8px;
+  height: 8px;
+  margin-top: 6px;
+  border-radius: var(--radius-pill);
+  background: currentColor;
+  box-shadow: 0 0 0 3px color-mix(in srgb, currentColor 18%, transparent);
+}
+
+.history-main {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.history-question {
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  font-size: 14px;
+  font-weight: 500;
+  line-height: 1.45;
+  color: var(--text-primary);
+}
+
+.history-item[data-open] .history-question {
+  display: block;
+}
+
+.history-meta {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  row-gap: var(--space-1);
+  font-size: 12px;
+  color: var(--text-tertiary);
+  font-variant-numeric: tabular-nums;
+}
+
+.history-meta > * + *::before {
+  content: "·";
+  margin: 0 var(--space-2);
+  color: var(--border-emphasis);
+}
+
+.history-status {
+  font-weight: 500;
+}
+
+.history-chevron {
+  transition: transform 0.2s;
+}
+
+.history-chevron-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  margin-left: var(--space-1);
+  padding: 0;
+  color: var(--text-tertiary);
+  background: none;
+  border: none;
+  border-radius: var(--radius-btn);
+  cursor: pointer;
+  transition: color 0.15s;
+}
+
+.history-chevron-btn:hover,
+.history-item[data-open] .history-chevron-btn {
+  color: var(--text-secondary);
+}
+
+.history-item[data-open] .history-chevron {
+  transform: rotate(180deg);
+}
+
+.history-actions {
+  flex: none;
+  display: flex;
+  align-items: center;
+  gap: var(--space-1);
+}
+
+/* Lines up with the question text: toggle padding + dot + gap. */
+.history-detail {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+  padding: 0 var(--space-4) var(--space-4) calc(var(--space-4) + 8px + var(--space-3));
+  animation: fadeIn 0.2s ease;
+}
+
+.history-label {
+  display: block;
+  margin-bottom: var(--space-1);
+  font-family: var(--font-mono);
+  font-size: 10px;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--text-tertiary);
+}
+
+.history-understood,
+.history-note {
+  font-size: 13px;
+  line-height: 1.5;
+  color: var(--text-secondary);
+}
+
+.history-error {
+  padding: 10px 12px;
+  font-size: 13px;
+  line-height: 1.5;
+  color: var(--text-primary);
+  background: var(--error-dim);
+  border: 1px solid color-mix(in srgb, var(--error) 25%, transparent);
+  border-radius: var(--radius-btn);
+}
+
+.history-skeleton-row {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--space-3);
+  padding: var(--space-4);
+}
+
+.history-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--space-2);
+  padding: var(--space-10) var(--space-6);
+  text-align: center;
+}
+
+.history-state-title {
+  font-size: 15px;
+  font-weight: 500;
+  color: var(--text-primary);
+}
+
+.history-state-text {
+  max-width: 380px;
+  margin-bottom: var(--space-2);
+  font-size: 13px;
+  color: var(--text-secondary);
+}
+
+.history-pagination {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-3);
+}
+
+.history-range {
+  font-size: 12px;
+  color: var(--text-tertiary);
+  font-variant-numeric: tabular-nums;
+}
+
+@media (max-width: 640px) {
+  .history-header {
+    align-items: flex-start;
+  }
+
+  .history-row {
+    flex-direction: column;
+    align-items: stretch;
+    padding-right: 0;
+  }
+
+  .history-actions {
+    padding: 0 var(--space-4) var(--space-3) calc(var(--space-4) + 8px + var(--space-3));
+  }
+
+  .history-chevron-btn {
+    margin-left: auto;
+  }
+
+  .history-detail {
+    padding-left: var(--space-4);
+  }
+}
+
+/* ─── Plan lock tag on actions the plan doesn't include ──────────────────────── */
+.plan-lock {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  padding: 1px 5px;
+  font-family: var(--font-mono);
+  font-size: 9px;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  border: 1px solid;
+  border-radius: var(--radius-chip);
+}
+
+.plan-lock-pro {
+  color: var(--accent);
+  background: var(--accent-glow);
+  border-color: color-mix(in srgb, var(--accent) 25%, transparent);
+}
+
+.plan-lock-team {
+  color: var(--info);
+  background: var(--info-dim);
+  border-color: color-mix(in srgb, var(--info) 25%, transparent);
+}
+
+/* Saved answer inside an opened History row */
+.saved-answer {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+  padding: var(--space-4);
+  background: var(--bg-surface);
+  border: 1px solid var(--border-subtle);
+  border-radius: var(--radius-card);
+}
+
+.saved-answer-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-3);
+}
+
+.saved-answer-head .history-label {
+  margin-bottom: 0;
+}
+
+.saved-answer-headline {
+  font-size: 16px;
+  font-weight: 500;
+  line-height: 1.4;
+  color: var(--text-primary);
+}
+
+/* A text-sized action inside an answer note ("Write a new query") */
+.answer-inline-action {
+  padding: 0;
+  font: inherit;
+  color: var(--accent);
+  background: none;
+  border: none;
+  text-decoration: underline;
+  text-underline-offset: 2px;
+  cursor: pointer;
+}
+
+.answer-inline-action:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
 }
