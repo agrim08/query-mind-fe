@@ -307,6 +307,7 @@ function rowsToRecords(columns: string[], rows: unknown[][]): Record<string, unk
 async function requestJson<T>(path: string, init: RequestInit = {}): Promise<T> {
   const headers = await authHeaders();
   const res = await fetch(`${BASE}${path}`, {
+    cache: "no-store",
     ...init,
     headers: { "Content-Type": "application/json", ...headers, ...init.headers },
   });

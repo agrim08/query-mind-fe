@@ -27,8 +27,9 @@ export const PLAN_LIMITS: Record<PlanId, PlanLimits> = {
 export function usePlan() {
   const { has } = useAuth();
   const feature = (key: string) => Boolean(has?.({ feature: key }));
-  const isTeam = feature("team_tier");
-  const isPro = isTeam || feature("pro_tier");
+  const checkPlan = (key: string) => Boolean(has?.({ plan: key }));
+  const isTeam = feature("team_tier") || checkPlan("team") || checkPlan("team_tier");
+  const isPro = isTeam || feature("pro_tier") || checkPlan("pro") || checkPlan("pro_tier");
   const plan: PlanId = isTeam ? "team" : isPro ? "pro" : "free";
   return {
     plan,
