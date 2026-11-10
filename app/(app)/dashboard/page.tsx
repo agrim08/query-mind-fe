@@ -12,6 +12,7 @@ import UsageMeter from "@/components/billing/UsageMeter";
 import AnswerView from "@/components/answer/AnswerView";
 import ClarifyPanel from "@/components/answer/ClarifyPanel";
 import StarterQuestions from "@/components/answer/StarterQuestions";
+import MessageView from "@/components/answer/MessageView";
 import SqlBlock from "@/components/sql/SqlBlock";
 
 // The run shortcut is ⌘ + Enter on a Mac and Ctrl + Enter elsewhere (both work).
@@ -283,12 +284,8 @@ export default function DashboardPage() {
         </div>
       )}
 
-      {/* Plain answer (questions about the database itself) */}
-      {message && (
-        <div className="card answer-card animate-fade-up" style={{ marginBottom: 16 }}>
-          <p className="answer-message">{message}</p>
-        </div>
-      )}
+      {/* Plain answer / schema overview (questions about the database itself) */}
+      {message && <MessageView message={message} onPick={pickSuggestion} />}
 
       {/* Answer: headline, chart, suggestions */}
       {isStreaming && !result && streamingSql && <DashboardSkeleton />}
