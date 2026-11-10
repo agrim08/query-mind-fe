@@ -1,5 +1,7 @@
 import React, { useState } from 'react';
-import { Send, Plus, Trash2, DatabaseZap } from 'lucide-react';
+import { Plus, Trash2, DatabaseZap } from 'lucide-react';
+import type { Node } from '@xyflow/react';
+import type { DesignColumn, DesignTable } from '@/lib/api';
 
 export function DesignSidebar({
   selectedNode,
@@ -9,9 +11,9 @@ export function DesignSidebar({
   isGenerating,
   hasNodes
 }: {
-  selectedNode: any;
+  selectedNode: Node<DesignTable> | undefined;
   onGenerate: (prompt: string) => void;
-  onUpdateTable: (nodeId: string, data: any) => void;
+  onUpdateTable: (nodeId: string, data: DesignTable) => void;
   onNewDesign: () => void;
   isGenerating: boolean;
   hasNodes: boolean;
@@ -24,7 +26,7 @@ export function DesignSidebar({
     onUpdateTable(selectedNode.id, { ...selectedNode.data, columns: newCols });
   };
 
-  const handleUpdateColumn = (index: number, field: string, value: any) => {
+  const handleUpdateColumn = (index: number, field: keyof DesignColumn, value: string | boolean) => {
     if (!selectedNode) return;
     const newCols = [...selectedNode.data.columns];
     newCols[index] = { ...newCols[index], [field]: value };
@@ -33,7 +35,7 @@ export function DesignSidebar({
 
   const handleDeleteColumn = (index: number) => {
     if (!selectedNode) return;
-    const newCols = selectedNode.data.columns.filter((_: any, i: number) => i !== index);
+    const newCols = selectedNode.data.columns.filter((_, i) => i !== index);
     onUpdateTable(selectedNode.id, { ...selectedNode.data, columns: newCols });
   };
 
@@ -106,7 +108,7 @@ export function DesignSidebar({
           </div>
 
           <div style={{ display: "flex", flexDirection: "column", gap: "12px" }}>
-            {selectedNode.data.columns?.map((col: any, i: number) => (
+            {selectedNode.data.columns?.map((col, i) => (
               <div key={i} style={{ border: "1px solid var(--border-subtle)", padding: "10px", borderRadius: 6, display: "flex", flexDirection: "column", gap: "8px" }}>
                 <div style={{ display: "flex", gap: "8px" }}>
                   <input

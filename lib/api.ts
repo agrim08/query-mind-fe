@@ -1,3 +1,5 @@
+import { readSse } from "./sse";
+
 const BASE = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:8000/api/v1";
 
 let _getToken: (() => Promise<string | null>) | null = null;
@@ -19,6 +21,39 @@ async function authHeaders(): Promise<HeadersInit> {
   return token ? { Authorization: `Bearer ${token}` } : {};
 }
 
+// ─── Errors ─────────────────────────────────────────────────────────────────
+
+/** Plan-limit codes the backend sends with HTTP 403 (business-logic.md §3). */
+export type LimitCode = "QUERY_LIMIT_REACHED" | "CONNECTION_LIMIT_REACHED" | "DESIGN_LIMIT_REACHED";
+
+const LIMIT_MESSAGES: Record<LimitCode, string> = {
+  QUERY_LIMIT_REACHED: "You've used all your questions for this month.",
+  CONNECTION_LIMIT_REACHED: "You've reached your plan's database limit.",
+  DESIGN_LIMIT_REACHED: "You've used all your schema designs for this month.",
+};
+
+/** Every failed backend call throws this: a user-safe message, plus the limit code if it was one. */
+export class ApiError extends Error {
+  constructor(
+    readonly status: number,
+    readonly code: LimitCode | null,
+    message: string,
+  ) {
+    super(message);
+    this.name = "ApiError";
+  }
+}
+
+async function apiError(res: Response, fallback: string): Promise<ApiError> {
+  const body = await res.json().catch(() => ({}));
+  const detail = typeof body.detail === "string" ? body.detail : null;
+  if (detail && detail in LIMIT_MESSAGES) {
+    const code = detail as LimitCode;
+    return new ApiError(res.status, code, LIMIT_MESSAGES[code]);
+  }
+  return new ApiError(res.status, null, detail ?? fallback);
+}
+
 // ─── User ───────────────────────────────────────────────────────────────────
 
 /** Profile fields only — the backend takes the user id from the verified Clerk token. */
@@ -33,7 +68,7 @@ export async function syncUser(data: {
     headers: { "Content-Type": "application/json", ...headers },
     body: JSON.stringify(data),
   });
-  if (!res.ok) throw new Error("Failed to sync user");
+  if (!res.ok) throw await apiError(res, "We couldn't load your account. Please refresh.");
   return res.json();
 }
 
@@ -51,7 +86,7 @@ export interface Connection {
 export async function getConnections(): Promise<Connection[]> {
   const headers = await authHeaders();
   const res = await fetch(`${BASE}/connections/`, { headers });
-  if (!res.ok) throw new Error("Failed to fetch connections");
+  if (!res.ok) throw await apiError(res, "We couldn't load your connections. Please refresh.");
   return res.json();
 }
 
@@ -81,10 +116,7 @@ export async function createConnection(data: {
     headers: { "Content-Type": "application/json", ...headers },
     body: JSON.stringify(data),
   });
-  if (!res.ok) {
-    const err = await res.json().catch(() => ({}));
-    throw new Error(err.detail ?? "Failed to create connection");
-  }
+  if (!res.ok) throw await apiError(res, "We couldn't save that connection. Please try again.");
   return res.json();
 }
 
@@ -94,10 +126,10 @@ export async function deleteConnection(id: string): Promise<void> {
     method: "DELETE",
     headers,
   });
-  if (!res.ok) throw new Error("Failed to delete connection");
+  if (!res.ok) throw await apiError(res, "We couldn't delete that connection. Please try again.");
 }
 
-export function indexSchema(
+export async function indexSchema(
   connectionId: string,
   onEvent: (event: {
     type: string;
@@ -108,41 +140,10 @@ export function indexSchema(
   }) => void,
   signal?: AbortSignal,
 ): Promise<void> {
-  return new Promise(async (resolve, reject) => {
-    try {
-      const headers = await authHeaders();
-      const res = await fetch(`${BASE}/connections/${connectionId}/index`, {
-        method: "POST",
-        headers,
-        signal,
-      });
-      if (!res.ok) {
-        const err = await res.json().catch(() => ({}));
-        return reject(new Error(err.detail ?? "Failed to index schema"));
-      }
-      const reader = res.body!.getReader();
-      const decoder = new TextDecoder();
-      let buffer = "";
-      while (true) {
-        const { done, value } = await reader.read();
-        if (done) break;
-        buffer += decoder.decode(value, { stream: true });
-        const lines = buffer.split("\n\n");
-        buffer = lines.pop() ?? "";
-        for (const line of lines) {
-          if (line.startsWith("data: ")) {
-            try {
-              const parsed = JSON.parse(line.slice(6));
-              onEvent(parsed);
-            } catch {}
-          }
-        }
-      }
-      resolve();
-    } catch (err) {
-      reject(err);
-    }
-  });
+  const headers = await authHeaders();
+  const res = await fetch(`${BASE}/connections/${connectionId}/index`, { method: "POST", headers, signal });
+  if (!res.ok) throw await apiError(res, "We couldn't start indexing. Please try again.");
+  await readSse(res, (data) => onEvent(data as Parameters<typeof onEvent>[0]));
 }
 
 // ─── Query ───────────────────────────────────────────────────────────────────
@@ -226,7 +227,7 @@ export interface ClarificationAnswer {
   answer: string;
 }
 
-export function streamQuery(
+export async function streamQuery(
   data: {
     nl_query: string;
     connection_id: string;
@@ -239,49 +240,21 @@ export function streamQuery(
   onEvent: (event: QueryStreamEvent) => void,
   signal?: AbortSignal,
 ): Promise<void> {
-  return new Promise(async (resolve, reject) => {
-    try {
-      const headers = await authHeaders();
-      const res = await fetch(`${BASE}/query/`, {
-        method: "POST",
-        headers: { "Content-Type": "application/json", ...headers },
-        body: JSON.stringify(data),
-        signal,
-      });
-      if (!res.ok) {
-        const err = await res.json().catch(() => ({}));
-        return reject(new Error(err.detail ?? "Query failed"));
-      }
-      const reader = res.body!.getReader();
-      const decoder = new TextDecoder();
-      let buffer = "";
-      while (true) {
-        const { done, value } = await reader.read();
-        if (done) break;
-        buffer += decoder.decode(value, { stream: true });
-        const lines = buffer.split("\n\n");
-        buffer = lines.pop() ?? "";
-        for (const line of lines) {
-          if (line.startsWith("data: ")) {
-            try {
-              const raw = JSON.parse(line.slice(6));
-              // Backend returns rows as list[list] — zip with columns into Record objects
-              if (
-                raw.type === "results" &&
-                Array.isArray(raw.rows) &&
-                Array.isArray(raw.columns)
-              ) {
-                raw.rows = rowsToRecords(raw.columns as string[], raw.rows as unknown[][]);
-              }
-              onEvent(raw);
-            } catch {}
-          }
-        }
-      }
-      resolve();
-    } catch (err) {
-      reject(err);
+  const headers = await authHeaders();
+  const res = await fetch(`${BASE}/query/`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json", ...headers },
+    body: JSON.stringify(data),
+    signal,
+  });
+  if (!res.ok) throw await apiError(res, "Something went wrong. Please try again.");
+  await readSse(res, (raw) => {
+    const event = raw as QueryStreamEvent;
+    // The backend sends rows as lists; components read them by column name.
+    if (event.type === "results" && Array.isArray(event.rows) && Array.isArray(event.columns)) {
+      event.rows = rowsToRecords(event.columns, event.rows as unknown as unknown[][]);
     }
+    onEvent(event);
   });
 }
 
@@ -319,7 +292,7 @@ export async function getHistory(
     url += `&connection_id=${connectionId}`;
   }
   const res = await fetch(url, { headers });
-  if (!res.ok) throw new Error("Failed to fetch history");
+  if (!res.ok) throw await apiError(res, "We couldn't load your history. Please refresh.");
   return res.json();
 }
 
@@ -337,10 +310,7 @@ async function requestJson<T>(path: string, init: RequestInit = {}): Promise<T> 
     ...init,
     headers: { "Content-Type": "application/json", ...headers, ...init.headers },
   });
-  if (!res.ok) {
-    const err = await res.json().catch(() => ({}));
-    throw new Error(typeof err.detail === "string" ? err.detail : "Something went wrong. Please try again.");
-  }
+  if (!res.ok) throw await apiError(res, "Something went wrong. Please try again.");
   return res.status === 204 ? (undefined as T) : res.json();
 }
 
@@ -475,16 +445,27 @@ export async function generateSchema(prompt: string): Promise<DBSchemaDesign> {
     headers: { "Content-Type": "application/json", ...headers },
     body: JSON.stringify({ prompt }),
   });
-  if (!res.ok) {
-    const err = await res.json().catch(() => ({}));
-    throw new Error(err.detail ?? "Failed to generate schema");
-  }
+  if (!res.ok) throw await apiError(res, "We couldn't design that schema. Please try again.");
   return res.json();
 }
 
 export async function getDesignHistory(): Promise<DesignHistoryEntry[]> {
   const headers = await authHeaders();
   const res = await fetch(`${BASE}/design/history`, { headers });
-  if (!res.ok) throw new Error("Failed to fetch design history");
+  if (!res.ok) throw await apiError(res, "We couldn't load your designs. Please refresh.");
   return res.json();
 }
+
+// ─── Usage (mirrors UsageResponse: the shape every metered feature exposes) ─────
+
+export interface Usage {
+  used: number;
+  limit: number;
+  unlimited: boolean;
+}
+
+/** Questions asked this calendar month (UTC) and the plan's limit. */
+export const getQuestionUsage = () => requestJson<Usage>("/query/usage");
+
+/** Schema designs this calendar month (UTC) and the plan's limit. */
+export const getDesignUsage = () => requestJson<Usage>("/design/usage");

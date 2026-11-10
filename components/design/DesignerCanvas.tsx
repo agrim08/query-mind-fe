@@ -14,18 +14,19 @@ import {
 } from '@xyflow/react';
 import '@xyflow/react/dist/style.css';
 import { TableNode } from './TableNode';
+import type { DesignTable } from '@/lib/api';
 
 const nodeTypes: NodeTypes = {
   table: TableNode,
 };
 
 interface DesignerCanvasProps {
-  nodes: Node[];
+  nodes: Node<DesignTable>[];
   edges: Edge[];
-  onNodesChange: OnNodesChange<Node>;
+  onNodesChange: OnNodesChange<Node<DesignTable>>;
   onEdgesChange: OnEdgesChange<Edge>;
   onConnect: (connection: Connection) => void;
-  onNodeClick: NodeMouseHandler<Node>;
+  onNodeClick: NodeMouseHandler<Node<DesignTable>>;
   onPaneClick: () => void;
 }
 

@@ -19,18 +19,18 @@ const PLAN_META = {
   pro: {
     label: PLANS.pro.name,
     price: `$${PLANS.pro.price}/mo`,
-    color: "#c8f04d",
-    bg: "rgba(200,240,77,0.06)",
-    border: "rgba(200,240,77,0.2)",
+    color: "var(--accent)",
+    bg: "var(--plan-pro-dim)",
+    border: "var(--plan-pro-border)",
     icon: Zap,
     perks: PLANS.pro.perks,
   },
   team: {
     label: PLANS.team.name,
     price: `$${PLANS.team.price}/mo`,
-    color: "#60a5fa",
-    bg: "rgba(96,165,250,0.06)",
-    border: "rgba(96,165,250,0.2)",
+    color: "var(--plan-team)",
+    bg: "var(--plan-team-dim)",
+    border: "var(--plan-team-border)",
     icon: Users,
     perks: PLANS.team.perks,
   },
@@ -276,7 +276,7 @@ export function UpgradeModal({
       onClick={(e) => { if (e.target === e.currentTarget) onClose(); }}
       style={{
         position: "fixed", inset: 0, zIndex: 200,
-        background: "rgba(8,9,9,0.75)",
+        background: "var(--scrim)",
         backdropFilter: "blur(10px)",
         WebkitBackdropFilter: "blur(10px)",
         display: "flex", alignItems: "center", justifyContent: "center",
@@ -286,11 +286,11 @@ export function UpgradeModal({
       <div
         style={{
           maxWidth: 420, width: "100%",
-          background: "#0e0f10",
+          background: "var(--bg-surface)",
           border: `1px solid ${meta.border}`,
           borderRadius: 20,
           overflow: "hidden",
-          boxShadow: `0 40px 100px rgba(0,0,0,0.7), 0 0 0 1px ${meta.color}18`,
+          boxShadow: `0 40px 100px var(--shadow-strong), 0 0 0 1px ${meta.color}18`,
           position: "relative",
           animation: "modalIn 0.22s cubic-bezier(0.22,1,0.36,1)",
         }}
@@ -305,13 +305,13 @@ export function UpgradeModal({
           onClick={onClose}
           style={{
             position: "absolute", top: 16, right: 16,
-            background: "rgba(255,255,255,0.05)", border: "none",
+            background: "var(--hairline)", border: "none",
             borderRadius: 7, padding: "5px", cursor: "pointer",
             display: "flex", alignItems: "center", justifyContent: "center",
-            color: "#4d5057", transition: "color 0.15s, background 0.15s",
+            color: "var(--text-tertiary)", transition: "color 0.15s, background 0.15s",
           }}
-          onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.color = "#f0f1f2"; }}
-          onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.color = "#4d5057"; }}
+          onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.color = "var(--text-primary)"; }}
+          onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.color = "var(--text-tertiary)"; }}
         >
           <X size={15} />
         </button>
@@ -328,7 +328,7 @@ export function UpgradeModal({
             </div>
             <div>
               <div style={{
-                fontSize: 16, fontWeight: 700, color: "#f0f1f2",
+                fontSize: 16, fontWeight: 700, color: "var(--text-primary)",
                 fontFamily: "var(--font-display)",
                 marginBottom: 3,
               }}>
@@ -343,14 +343,14 @@ export function UpgradeModal({
                 }}>
                   {meta.label}
                 </span>
-                <span style={{ fontSize: 11, fontFamily: "var(--font-mono)", color: "#4d5057" }}>
+                <span style={{ fontSize: 11, fontFamily: "var(--font-mono)", color: "var(--text-tertiary)" }}>
                   {meta.price}
                 </span>
               </div>
             </div>
           </div>
 
-          <p style={{ fontSize: 13, color: "#8a8d93", lineHeight: 1.65, marginBottom: 18 }}>
+          <p style={{ fontSize: 13, color: "var(--text-secondary)", lineHeight: 1.65, marginBottom: 18 }}>
             {description ?? defaultDescription}
           </p>
 
@@ -360,7 +360,7 @@ export function UpgradeModal({
             display: "flex", flexDirection: "column", gap: 8,
           }}>
             {meta.perks.map((perk) => (
-              <li key={perk} style={{ display: "flex", alignItems: "center", gap: 9, fontSize: 13, color: "#8a8d93" }}>
+              <li key={perk} style={{ display: "flex", alignItems: "center", gap: 9, fontSize: 13, color: "var(--text-secondary)" }}>
                 <div style={{
                   width: 18, height: 18, borderRadius: "50%",
                   background: meta.bg, border: `1px solid ${meta.border}`,
@@ -392,7 +392,7 @@ export function UpgradeModal({
           </Link>
 
           <p style={{
-            marginTop: 12, fontSize: 11, color: "#4d5057",
+            marginTop: 12, fontSize: 11, color: "var(--text-tertiary)",
             fontFamily: "var(--font-mono)", textAlign: "center",
           }}>
             Cancel anytime · Powered by Stripe

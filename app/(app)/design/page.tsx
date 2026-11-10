@@ -7,17 +7,23 @@ import { DesignSidebar } from '@/components/design/DesignSidebar';
 import { DesignHistory } from '@/components/design/DesignHistory';
 import { exportCanvasToPDF } from '@/lib/exportUtils';
 import { exportToSQL } from '@/lib/schemaSql';
-import { generateSchema, type DBSchemaDesign, type DesignTable } from '@/lib/api';
+import { generateSchema, getDesignUsage, type DBSchemaDesign, type DesignTable } from '@/lib/api';
+import { useLimitUpgrade } from '@/hooks/useLimitUpgrade';
+import { useUsage } from '@/hooks/useUsage';
+import UsageMeter from '@/components/billing/UsageMeter';
 import { History as HistoryIcon } from 'lucide-react';
 import toast from 'react-hot-toast';
 
 export default function DesignPage() {
-  const [nodes, setNodes, onNodesChange] = useNodesState<Node>([]);
+  const [nodes, setNodes, onNodesChange] = useNodesState<Node<DesignTable>>([]);
   const [edges, setEdges, onEdgesChange] = useEdgesState<Edge>([]);
   
   const [selectedNodeId, setSelectedNodeId] = useState<string | null>(null);
   const [isGenerating, setIsGenerating] = useState(false);
   const [isHistoryOpen, setIsHistoryOpen] = useState(false);
+  const [generated, setGenerated] = useState(0); // reloads the usage meter
+  const designUsage = useUsage(getDesignUsage, generated);
+  const { upgradeModal, handleLimit } = useLimitUpgrade();
 
   const selectedNode = useMemo(() => nodes.find(n => n.id === selectedNodeId), [nodes, selectedNodeId]);
 
@@ -30,15 +36,19 @@ export default function DesignPage() {
       loadSchemaToCanvas(data);
       toast.success("Database schema generated!");
     } catch (err: unknown) {
-      toast.error(err instanceof Error && err.message ? err.message : "Failed to generate schema");
+      // A plan limit opens the upgrade prompt instead of an error toast.
+      if (!handleLimit(err)) {
+        toast.error(err instanceof Error && err.message ? err.message : "We couldn't design that schema. Please try again.");
+      }
     } finally {
       setIsGenerating(false);
+      setGenerated((n) => n + 1);
     }
   };
 
   const loadSchemaToCanvas = (data: DBSchemaDesign) => {
     // Auto-layout simple spacing
-    const newNodes: Node[] = data.tables.map((table, index) => ({
+    const newNodes: Node<DesignTable>[] = data.tables.map((table, index) => ({
       id: table.id,
       type: 'table',
       position: { x: (index % 3) * 350 + 100, y: Math.floor(index / 3) * 300 + 100 },
@@ -69,7 +79,7 @@ export default function DesignPage() {
   };
 
   const handleExportSQL = () => {
-    const rawTables = nodes.map(n => n.data as DesignTable);
+    const rawTables = nodes.map((n) => n.data);
     const sqlString = exportToSQL(rawTables, edges);
     
     // Download logic
@@ -94,7 +104,10 @@ export default function DesignPage() {
     <div style={{ display: 'flex', height: '100%', flexDirection: 'column', overflow: 'hidden' }}>
       
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '12px 24px', borderBottom: '1px solid var(--border-subtle)', background: 'var(--bg-panel)' }}>
-        <h1 className="font-heading" style={{ fontSize: 20 }}>DB Designer</h1>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 16 }}>
+          <h1 className="font-heading" style={{ fontSize: 20 }}>DB Designer</h1>
+          <UsageMeter usage={designUsage} noun="designs" inline />
+        </div>
         <div style={{ display: 'flex', gap: 12 }}>
           <button className="btn btn-ghost btn-sm" onClick={() => setIsHistoryOpen(!isHistoryOpen)}>
             <HistoryIcon size={14} style={{ marginRight: 6 }} /> History
@@ -171,6 +184,7 @@ export default function DesignPage() {
           }}
         />
       </div>
+      {upgradeModal}
     </div>
   );
 }

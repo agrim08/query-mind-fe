@@ -20,7 +20,7 @@ export const PLANS: Record<PlanId, Plan> = {
     price: 0,
     cadence: "forever",
     pitch: "For trying it on one database.",
-    perks: ["1 database connection", "50 questions / month", "1 schema design / month", "Read-only execution"],
+    perks: ["1 database connection", "50 questions / month", "1 schema design / month", "Learns your business terms", "Read-only execution"],
   },
   pro: {
     id: "pro",
@@ -28,7 +28,7 @@ export const PLANS: Record<PlanId, Plan> = {
     price: 12,
     cadence: "per month",
     pitch: "For people who ask their data questions every day.",
-    perks: ["5 database connections", "Unlimited questions", "6 schema designs / month", "CSV export"],
+    perks: ["5 database connections", "Unlimited questions", "6 schema designs / month", "Learns your business terms", "CSV export"],
   },
   team: {
     id: "team",
@@ -40,6 +40,7 @@ export const PLANS: Record<PlanId, Plan> = {
       "Unlimited connections",
       "Unlimited questions",
       "Unlimited schema designs",
+      "Learns your business terms",
       "CSV + PDF export",
     ],
   },

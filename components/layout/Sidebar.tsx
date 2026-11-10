@@ -2,7 +2,8 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { useUser, useClerk, useAuth } from "@clerk/nextjs";
+import { useUser, useClerk } from "@clerk/nextjs";
+import { usePlan } from "@/lib/entitlements";
 import {
   LayoutDashboard,
   History,
@@ -28,10 +29,7 @@ const NAV_ITEMS = [
 ];
 
 function PlanBadge() {
-  const { has } = useAuth();
-
-  const isTeam = has?.({ feature: "team_tier" });
-  const isPro = has?.({ feature: "pro_tier" });
+  const { isTeam, isPro } = usePlan();
 
   if (isTeam) {
     return (
@@ -40,9 +38,9 @@ function PlanBadge() {
           fontSize: 9,
           fontFamily: "var(--font-mono)",
           fontWeight: 600,
-          color: "#60a5fa",
-          background: "rgba(96,165,250,0.1)",
-          border: "1px solid rgba(96,165,250,0.2)",
+          color: "var(--plan-team)",
+          background: "var(--plan-team-dim)",
+          border: "1px solid var(--plan-team-border)",
           padding: "1px 6px",
           borderRadius: 4,
           display: "flex",
@@ -64,9 +62,9 @@ function PlanBadge() {
           fontSize: 9,
           fontFamily: "var(--font-mono)",
           fontWeight: 600,
-          color: "#c8f04d",
-          background: "rgba(200,240,77,0.08)",
-          border: "1px solid rgba(200,240,77,0.2)",
+          color: "var(--accent)",
+          background: "var(--plan-pro-dim)",
+          border: "1px solid var(--plan-pro-border)",
           padding: "1px 6px",
           borderRadius: 4,
           display: "flex",

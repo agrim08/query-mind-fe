@@ -1,30 +1,28 @@
 "use client";
 
-import { useAuth } from "@clerk/nextjs";
+import { usePlan } from "@/lib/entitlements";
 import { PricingTable } from "@clerk/nextjs";
 import Link from "next/link";
 import { ArrowLeft, CheckCircle2, Zap, Users, ShieldCheck, CreditCard } from "lucide-react";
 
 /* ─── Tokens ─────────────────────────────────────────────────────────────── */
-const ELEVATED = "#141516";
-const BORDER   = "#27282b";
-const ACCENT   = "#c8f04d";
-const TEXT1    = "#f0f1f2";
-const TEXT2    = "#8a8d93";
-const TEXT3    = "#4d5057";
-const INFO     = "#60a5fa";
+const ELEVATED = "var(--bg-raised)";
+const BORDER   = "var(--border-default)";
+const ACCENT   = "var(--accent)";
+const TEXT1    = "var(--text-primary)";
+const TEXT2    = "var(--text-secondary)";
+const TEXT3    = "var(--text-tertiary)";
+const INFO     = "var(--plan-team)";
 const HEADING: React.CSSProperties = { fontFamily: "var(--font-display)", fontWeight: 800, letterSpacing: "-0.04em" };
 const MONO:    React.CSSProperties = { fontFamily: "var(--font-mono)" };
 
 /* ─── Plan badge ─────────────────────────────────────────────────────────── */
 function CurrentPlanBadge() {
-  const { has } = useAuth();
-  const isTeam = has?.({ feature: "team_tier" });
-  const isPro  = has?.({ feature: "pro_tier" });
+  const { isTeam, isPro } = usePlan();
   const cfg = isTeam
-    ? { label: "Team", color: INFO,   bg: "rgba(96,165,250,0.08)",  border: "rgba(96,165,250,0.25)",  Icon: Users }
+    ? { label: "Team", color: INFO,   bg: "var(--plan-team-dim)",  border: "var(--plan-team-border)",  Icon: Users }
     : isPro
-    ? { label: "Pro",  color: ACCENT, bg: "rgba(200,240,77,0.08)",  border: "rgba(200,240,77,0.25)",  Icon: Zap }
+    ? { label: "Pro",  color: ACCENT, bg: "var(--plan-pro-dim)",  border: "var(--plan-pro-border)",  Icon: Zap }
     : { label: "Free", color: TEXT3,  bg: ELEVATED,                 border: BORDER,                   Icon: CheckCircle2 };
   return (
     <div style={{ display: "inline-flex", alignItems: "center", gap: 8, padding: "8px 16px", borderRadius: 10, background: cfg.bg, border: `1px solid ${cfg.border}` }}>
@@ -84,7 +82,7 @@ export default function BillingPage() {
         [class*="pricingTableCardSubscribeButton"],
         [class*="subscribeButton"],
         [class*="SubscribeButton"] {
-          color: #080909 !important;
+          color: var(--bg-base) !important;
         }
       `}</style>
 
@@ -103,7 +101,7 @@ export default function BillingPage() {
 
         {/* Section label */}
         <div style={{ textAlign: "center" }}>
-          <div style={{ display: "inline-flex", alignItems: "center", gap: 8, marginBottom: 12, padding: "5px 14px", borderRadius: 9999, background: "rgba(200,240,77,0.07)", border: "1px solid rgba(200,240,77,0.2)" }}>
+          <div style={{ display: "inline-flex", alignItems: "center", gap: 8, marginBottom: 12, padding: "5px 14px", borderRadius: 9999, background: "var(--plan-pro-dim)", border: "1px solid var(--plan-pro-border)" }}>
             <span style={{ width: 5, height: 5, borderRadius: "50%", background: ACCENT, display: "inline-block" }} />
             <span style={{ ...MONO, fontSize: 11, letterSpacing: "0.1em", textTransform: "uppercase", color: ACCENT }}>Pricing</span>
           </div>
@@ -117,14 +115,14 @@ export default function BillingPage() {
         <PricingTable
           appearance={{
             variables: {
-              colorPrimary:               "#c8f04d",
-              colorPrimaryForeground:     "#080909",   // black text on green button
-              colorBackground:            "#0e0f10",
-              colorText:                  "#f0f1f2",
-              colorTextSecondary:         "#8a8d93",
-              colorInputBackground:       "#141516",
-              colorInputText:             "#f0f1f2",
-              colorNeutral:               "#8a8d93",
+              colorPrimary:               "var(--accent)",
+              colorPrimaryForeground:     "var(--bg-base)",   // black text on green button
+              colorBackground:            "var(--bg-surface)",
+              colorText:                  "var(--text-primary)",
+              colorTextSecondary:         "var(--text-secondary)",
+              colorInputBackground:       "var(--bg-raised)",
+              colorInputText:             "var(--text-primary)",
+              colorNeutral:               "var(--text-secondary)",
               fontFamily:                 "var(--font-sans)",
               fontFamilyButtons:          "var(--font-sans)",
               fontSize:                   "14px",

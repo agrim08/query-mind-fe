@@ -87,6 +87,19 @@
 
   /* Additional */
   --bg-panel: #0f1011;
+  /* Plans: Pro is the brand lime, Team is blue (badges, upgrade prompts, billing) */
+  --plan-pro: var(--accent);
+  --plan-pro-dim: rgba(200, 240, 77, 0.08);
+  --plan-pro-border: rgba(200, 240, 77, 0.22);
+  --plan-team: #60a5fa;
+  --plan-team-dim: rgba(96, 165, 250, 0.08);
+  --plan-team-border: rgba(96, 165, 250, 0.22);
+  /* Overlays and edges */
+  --scrim: rgba(8, 9, 9, 0.75);
+  --shadow-strong: rgba(0, 0, 0, 0.7);
+  --hairline: rgba(255, 255, 255, 0.05);
+  --success-border: rgba(34, 197, 94, 0.2);
+  --error-border: rgba(239, 68, 68, 0.2);
   /* Dims the part of the diagram outside the view in the canvas minimap (bg-base, see-through) */
   --minimap-mask: rgba(8, 9, 9, 0.6);
 }
@@ -2633,4 +2646,47 @@ select.input {
 .answer-inline-action:disabled {
   opacity: 0.5;
   cursor: not-allowed;
+}
+
+/* ─── Usage meter: "12 / 50 questions this month" ───────────────────────────── */
+.usage-meter {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  margin: -8px 0 var(--space-4);
+  font-size: 12px;
+  color: var(--text-tertiary);
+  font-variant-numeric: tabular-nums;
+}
+
+.usage-meter-bar {
+  position: relative;
+  width: 72px;
+  height: 4px;
+  border-radius: var(--radius-pill);
+  background: var(--bg-overlay);
+  overflow: hidden;
+}
+
+.usage-meter-bar > span {
+  position: absolute;
+  inset: 0 auto 0 0;
+  border-radius: var(--radius-pill);
+  background: var(--text-tertiary);
+}
+
+.usage-meter[data-state="near"] .usage-meter-bar > span { background: var(--warning); }
+.usage-meter[data-state="full"] .usage-meter-bar > span { background: var(--error); }
+
+.usage-meter-link {
+  color: var(--accent);
+}
+
+.usage-meter-link:hover,
+.usage-meter-link:focus-visible {
+  text-decoration: underline;
+}
+
+.usage-meter[data-inline] {
+  margin: 0;
 }

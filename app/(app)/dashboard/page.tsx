@@ -1,11 +1,14 @@
 "use client";
 
-import { useCallback, useEffect, useRef, useSyncExternalStore } from "react";
+import { useCallback, useEffect, useRef, useState, useSyncExternalStore } from "react";
 import { Send, RotateCcw } from "lucide-react";
 import toast from "react-hot-toast";
-import { type ClarificationAnswer, streamQuery } from "@/lib/api";
+import { type ClarificationAnswer, getQuestionUsage, streamQuery } from "@/lib/api";
 import { useConnectionStore, useQueryStore } from "@/lib/store";
 import { useKnowledge } from "@/hooks/useKnowledge";
+import { useLimitUpgrade } from "@/hooks/useLimitUpgrade";
+import { useUsage } from "@/hooks/useUsage";
+import UsageMeter from "@/components/billing/UsageMeter";
 import AnswerView from "@/components/answer/AnswerView";
 import ClarifyPanel from "@/components/answer/ClarifyPanel";
 import StarterQuestions from "@/components/answer/StarterQuestions";
@@ -45,6 +48,10 @@ export default function DashboardPage() {
   const abortRef = useRef<AbortController | null>(null);
   const inputRef = useRef<HTMLTextAreaElement>(null);
   const askedRef = useRef("");
+  // Bumped after every question so the usage meter reloads.
+  const [askedCount, setAskedCount] = useState(0);
+  const usage = useUsage(getQuestionUsage, askedCount);
+  const { upgradeModal, handleLimit } = useLimitUpgrade();
   // How the last question was asked, so "Write a new query" can ask it again the same way.
   const lastFollowUpRef = useRef<string | undefined>(undefined);
 
@@ -128,11 +135,14 @@ export default function DashboardPage() {
         useQueryStore.getState().endStream();
       } catch (err: unknown) {
         if (err instanceof Error && err.name !== "AbortError") {
+          handleLimit(err); // a plan limit opens the upgrade prompt; the message stays below
           useQueryStore.getState().setError(err.message);
         }
+      } finally {
+        setAskedCount((n) => n + 1);
       }
     },
-    [selectedId],
+    [selectedId, handleLimit],
   );
 
   // The answer reused an earlier one; ask the model again (counts as a new question).
@@ -238,6 +248,7 @@ export default function DashboardPage() {
           </div>
         </div>
       </div>
+      <UsageMeter usage={usage} noun="questions" />
 
       {/* Streaming status */}
       {isStreaming && (
@@ -317,6 +328,7 @@ export default function DashboardPage() {
           Select a connection at the top right, then ask a question.
         </p>
       )}
+      {upgradeModal}
     </div>
   );
 }

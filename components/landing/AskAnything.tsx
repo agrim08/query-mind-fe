@@ -18,7 +18,7 @@ export function AskAnything() {
               <br className="hidden sm:block" /> ask a teammate.
             </>
           }
-          lead="No table names, no joins, no syntax. If your data can answer it, you can ask it."
+          lead="No table names, no joins, no syntax. Every answer shows the SQL behind it, so you can check it."
         />
 
         <ul className="grid border-t border-line-subtle sm:grid-cols-2 sm:gap-x-10">

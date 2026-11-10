@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useRef, useState } from "react";
 import { useAuth } from "@clerk/nextjs";
-import { setTokenGetter } from "@/lib/api";
+import { usePlan } from "@/lib/entitlements";
 
 import {
   getConnections,
@@ -26,7 +26,6 @@ import toast from "react-hot-toast";
 import IndexingContextPrompt from "@/components/knowledge/IndexingContextPrompt";
 import UpgradePrompt from "@/components/billing/UpgradePrompt";
 
-const PLAN_LIMITS = { free: 1, pro: 5 } as const;
 
 // ─── Add Connection Modal ─────────────────────────────────────────────────────
 function AddConnectionModal({
@@ -163,8 +162,8 @@ function AddConnectionModal({
                     : "var(--error-dim)",
                   border: `1px solid ${
                     testResult.ok
-                      ? "rgba(34,197,94,0.2)"
-                      : "rgba(239,68,68,0.2)"
+                      ? "var(--success-border)"
+                      : "var(--error-border)"
                   }`,
                 }}
               >
@@ -497,26 +496,19 @@ export default function ConnectionsPage() {
   const [connections, setConnections] = useState<Connection[]>([]);
   const [loading, setLoading] = useState(true);
   const [showModal, setShowModal] = useState(false);
-  const { isSignedIn, getToken, has } = useAuth();
+  const { isSignedIn } = useAuth();
+  const { limits, nextPlan } = usePlan();
   const { addConnection, removeConnection, setConnections: storeSet } =
     useConnectionStore();
 
-  const isTeam = has?.({ feature: "team_tier" });
-  const isPro = has?.({ feature: "pro_tier" });
-
-  const maxConnections = isTeam
-    ? Infinity
-    : isPro
-    ? PLAN_LIMITS.pro
-    : PLAN_LIMITS.free;
+  const maxConnections = limits.connections ?? Infinity;
 
   const atLimit =
     !loading && maxConnections !== Infinity && connections.length >= maxConnections;
 
-  const requiredPlan: "pro" | "team" = isPro ? "team" : "pro";
+  const requiredPlan = nextPlan ?? "team";
 
   const load = useCallback(async () => {
-    setTokenGetter(() => getToken());
     setLoading(true);
     try {
       const conns = await getConnections();
@@ -525,7 +517,7 @@ export default function ConnectionsPage() {
     } finally {
       setLoading(false);
     }
-  }, [storeSet, getToken]);
+  }, [storeSet]);
 
   useEffect(() => {
     if (isSignedIn) load();

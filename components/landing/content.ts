@@ -157,7 +157,7 @@ export const FAQS: Faq[] = [
   },
   {
     q: "What leaves my database?",
-    a: "To build the search index: table and column names, types, foreign keys and one example value per column. When you ask a question: the question and the generated SQL. Result rows are shown to you and are not stored. Your history keeps the question, the SQL, the row count and the timing.",
+    a: "To build the search index: table and column names, types, foreign keys, and the values of short category columns (like a status or a country, up to 25 values). Never passwords, emails, names or other personal columns, and never whole rows. When you ask a question: the question and your business definitions go to the AI; results never do. Your history keeps the question, the SQL and a small saved answer (up to 50 rows) that only you can see, deleted with the question or the connection.",
   },
   {
     q: "How are my credentials stored?",
@@ -169,10 +169,14 @@ export const FAQS: Faq[] = [
   },
   {
     q: "What if the SQL is wrong?",
-    a: "You see the SQL before the results, and it can only reference tables that exist in your schema. If your tables can't answer the question, QueryMind tells you so instead of making something up.",
+    a: "You see the SQL and what QueryMind understood, plus any assumption it made, with one click to the other reading. It can only use tables that exist in your schema, and if your tables can't answer the question, it says so instead of making something up. Mark a correct answer with 👍 and similar questions reuse it.",
   },
   {
     q: "What counts as a question?",
-    a: "Each question you run counts once, including ones that end in an error. Requests that are stopped before they start, for example when you're over your monthly limit, don't count.",
+    a: "Each question you run counts once, including ones that end in an error. Answering a clarifying question doesn't count again, and neither does the automatic fix of a broken query. Requests that are stopped before they start, for example when you're over your monthly limit, don't count.",
+  },
+  {
+    q: "How big can my database be, and how accurate is it?",
+    a: "Smaller schemas (roughly 50 to 150 tables, depending on how many columns they have) are given to the AI whole, so no table can be missed. Larger ones (we test with about 200) use search, which found every table a question needed in 97–100% of our test questions. On our public test set of 68 questions, the SQL returned the right answer for 61 (90%), and you always see the SQL to check it.",
   },
 ];

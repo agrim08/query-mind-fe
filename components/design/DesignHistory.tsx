@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
-import { History, Search, Loader2, Clock, X, DatabaseZap, SearchX } from 'lucide-react';
-import { getDesignHistory, DesignHistoryEntry } from '@/lib/api';
+import { History, Search, Loader2, Clock, X, SearchX } from 'lucide-react';
+import { getDesignHistory, type DBSchemaDesign, type DesignHistoryEntry } from '@/lib/api';
 import { formatDistanceToNow } from 'date-fns';
 
 export function DesignHistory({
@@ -8,7 +8,7 @@ export function DesignHistory({
   isOpen,
   onClose
 }: {
-  onLoadDesign: (schema: any) => void;
+  onLoadDesign: (schema: DBSchemaDesign) => void;
   isOpen: boolean;
   onClose: () => void;
 }) {

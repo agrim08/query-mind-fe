@@ -1,15 +1,12 @@
 import { memo } from 'react';
-import { Handle, Position } from '@xyflow/react';
+import { Handle, Position, type Node, type NodeProps } from '@xyflow/react';
+import type { DesignColumn, DesignTable } from '@/lib/api';
 import { Key } from 'lucide-react';
 
-interface Column {
-  name: string;
-  type: string;
-  isPrimary?: boolean;
-  isForeign?: boolean;
-}
+/** A table on the designer canvas; its data is the generated DesignTable. */
+export type TableNodeType = Node<DesignTable, 'table'>;
 
-export const TableNode = memo(({ data, selected }: any) => {
+export const TableNode = memo(({ data, selected }: NodeProps<TableNodeType>) => {
   return (
     <div
       className={`card ${selected ? 'border-[var(--accent)] ring-1 ring-[var(--accent)]' : ''}`}
@@ -42,7 +39,7 @@ export const TableNode = memo(({ data, selected }: any) => {
       </div>
 
       <div style={{ padding: "8px 0" }}>
-        {data.columns?.map((col: Column, i: number) => (
+        {data.columns?.map((col: DesignColumn, i: number) => (
           <div
             key={i}
             style={{
